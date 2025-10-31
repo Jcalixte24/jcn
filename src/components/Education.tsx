@@ -78,7 +78,7 @@ const Education = () => {
               return (
                 <Card 
                   key={index} 
-                  className="p-6 md:p-8 hover:shadow-glow transition-smooth animate-fade-in"
+                  className="p-6 md:p-8 hover-lift glass-card animate-fade-in"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <div className="flex flex-col md:flex-row gap-6">

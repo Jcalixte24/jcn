@@ -13,6 +13,7 @@ const Hero = () => {
           alt="" 
           className="w-full h-full object-cover opacity-20"
         />
+        <div className="absolute inset-0 gradient-mesh"></div>
         <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-background to-accent/5"></div>
       </div>
 
@@ -40,13 +41,13 @@ const Hero = () => {
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">
-                <Button size="lg" className="gap-2 shadow-glow">
+                <Button size="lg" className="gap-2 shadow-glow-strong animate-pulse-glow">
                   <a href="#contact" className="flex items-center gap-2">
                     Me Contacter
                     <Mail className="w-4 h-4" />
                   </a>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2">
+                <Button size="lg" variant="outline" className="gap-2 hover-lift">
                   <Download className="w-4 h-4" />
                   Télécharger CV
                 </Button>
@@ -80,12 +81,13 @@ const Hero = () => {
 
             {/* Right: Profile Image */}
             <div className="flex justify-center animate-slide-in-right">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary to-accent rounded-full blur-3xl opacity-30 animate-pulse-glow"></div>
+              <div className="relative group">
+                <div className="absolute inset-0 bg-gradient-to-tr from-primary to-accent rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-smooth animate-pulse-glow"></div>
+                <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-smooth"></div>
                 <img 
                   src={profileImg} 
                   alt="Japhet Calixte" 
-                  className="relative w-80 h-80 rounded-full object-cover border-4 border-primary/20 shadow-card"
+                  className="relative w-80 h-80 rounded-full object-cover border-4 border-primary/20 shadow-xl group-hover:border-primary/40 group-hover:scale-105 transition-bounce"
                 />
               </div>
             </div>

@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Github, FolderGit2 } from "lucide-react";
+import { ExternalLink, Github, FolderGit2, Sparkles } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const projects = [
   {
@@ -66,7 +67,7 @@ const Projects = () => {
             {projects.map((project, index) => (
               <Card 
                 key={index} 
-                className="p-6 hover:shadow-glow transition-smooth animate-fade-in flex flex-col"
+                className="p-6 hover-lift glass-card animate-fade-in flex flex-col group"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
                 <div className="flex items-start gap-4 mb-4">
@@ -132,16 +133,22 @@ const Projects = () => {
             ))}
           </div>
 
-          {/* GitHub Link */}
-          <div className="text-center mt-12">
-            <Button size="lg" className="gap-2" asChild>
+          {/* GitHub Links */}
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mt-12">
+            <Button size="lg" className="gap-2 shadow-glow-strong" asChild>
+              <Link to="/github-projects">
+                <Sparkles className="w-5 h-5" />
+                Visualisation Interactive
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" className="gap-2 hover-lift" asChild>
               <a 
                 href="https://github.com/Jcalixte24" 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
                 <Github className="w-5 h-5" />
-                Voir tous mes projets sur GitHub
+                Voir sur GitHub
               </a>
             </Button>
           </div>

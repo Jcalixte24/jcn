@@ -38,9 +38,9 @@ const About = () => {
 
             {/* Right: Key Points */}
             <div className="space-y-4">
-              <Card className="p-6 hover:shadow-glow transition-smooth">
+              <Card className="p-6 hover-lift glass-card group">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10">
+                  <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-smooth">
                     <Target className="w-6 h-6 text-primary" />
                   </div>
                   <div>
@@ -53,9 +53,9 @@ const About = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 hover:shadow-glow transition-smooth">
+              <Card className="p-6 hover-lift glass-card group">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-accent/10">
+                  <div className="p-3 rounded-lg bg-accent/10 group-hover:bg-accent/20 transition-smooth">
                     <Globe className="w-6 h-6 text-accent" />
                   </div>
                   <div>
@@ -68,9 +68,9 @@ const About = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 hover:shadow-glow transition-smooth">
+              <Card className="p-6 hover-lift glass-card group">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10">
+                  <div className="p-3 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-smooth">
                     <Lightbulb className="w-6 h-6 text-primary" />
                   </div>
                   <div>

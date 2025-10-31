@@ -73,7 +73,7 @@ const Skills = () => {
                 return (
                   <Card 
                     key={index}
-                    className="p-6 hover:shadow-glow transition-smooth animate-fade-in"
+                    className="p-6 hover-lift glass-card animate-fade-in"
                     style={{ animationDelay: `${index * 0.1}s` }}
                   >
                     <div className="flex items-center gap-3 mb-4">
