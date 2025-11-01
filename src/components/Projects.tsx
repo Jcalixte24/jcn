@@ -91,11 +91,14 @@ const Projects = () => {
             {projects.map((project, index) => (
               <Card 
                 key={index} 
-                className="p-6 hover-lift glass-card animate-fade-in flex flex-col group"
+                className="p-6 hover-lift glass-card animate-fade-in flex flex-col group relative overflow-hidden"
                 style={{ animationDelay: `${index * 0.1}s` }}
               >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="p-3 rounded-lg bg-primary/10 flex-shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-smooth"></div>
+                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/10 to-transparent rounded-full blur-3xl group-hover:scale-150 transition-smooth"></div>
+                
+                <div className="relative flex items-start gap-4 mb-4">
+                  <div className="p-3 rounded-lg bg-primary/10 flex-shrink-0 group-hover:scale-110 transition-bounce group-hover:rotate-6">
                     <FolderGit2 className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1">

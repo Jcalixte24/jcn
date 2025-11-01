@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Github, Linkedin, Mail, Download, ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
-import profileImg from "@/assets/japhet-profile.jpg";
+import profileImg from "@/assets/japhet-profile-pro.jpg";
 
 const Hero = () => {
   return (
@@ -79,16 +79,18 @@ const Hero = () => {
               </div>
             </div>
 
-            {/* Right: Profile Image */}
-            <div className="flex justify-center animate-slide-in-right">
-              <div className="relative group">
+              <div className="flex justify-center animate-slide-in-right">
+              <div className="relative group animate-float">
                 <div className="absolute inset-0 bg-gradient-to-tr from-primary to-accent rounded-full blur-3xl opacity-30 group-hover:opacity-50 transition-smooth animate-pulse-glow"></div>
                 <div className="absolute -inset-4 bg-gradient-to-tr from-primary/20 to-accent/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-smooth"></div>
-                <img 
-                  src={profileImg} 
-                  alt="Japhet Calixte" 
-                  className="relative w-80 h-80 rounded-full object-cover border-4 border-primary/20 shadow-xl group-hover:border-primary/40 group-hover:scale-105 transition-bounce"
-                />
+                <div className="relative">
+                  <img 
+                    src={profileImg} 
+                    alt="Japhet Calixte" 
+                    className="relative w-80 h-80 rounded-full object-cover border-4 border-primary/20 shadow-xl group-hover:border-primary/40 group-hover:scale-105 transition-bounce"
+                  />
+                  <div className="absolute inset-0 rounded-full animate-shimmer"></div>
+                </div>
               </div>
             </div>
           </div>

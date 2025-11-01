@@ -24,7 +24,8 @@ const githubProjects = [
       "Algorithmes de pathfinding optimisés",
       "Système de niveaux progressifs"
     ],
-    color: "from-blue-500 to-cyan-500"
+    color: "from-blue-500 to-cyan-500",
+    url: "https://github.com/Jcalixte24/sokoban-CLI"
   },
   {
     id: 2,
@@ -44,7 +45,8 @@ const githubProjects = [
       "Analyse temporelle des retards",
       "Visualisations interactives complètes"
     ],
-    color: "from-purple-500 to-pink-500"
+    color: "from-purple-500 to-pink-500",
+    url: "https://github.com/Jcalixte24/Flight-prediction"
   },
   {
     id: 3,
@@ -64,7 +66,8 @@ const githubProjects = [
       "Optimisation de parcours urbains",
       "Application locale pour Abidjan"
     ],
-    color: "from-green-500 to-teal-500"
+    color: "from-green-500 to-teal-500",
+    url: "https://github.com/Jcalixte24/abidjan-route-finder"
   },
   {
     id: 4,
@@ -84,7 +87,8 @@ const githubProjects = [
       "Feature engineering créatif",
       "Comparaison de modèles ML"
     ],
-    color: "from-orange-500 to-red-500"
+    color: "from-orange-500 to-red-500",
+    url: "https://github.com/Jcalixte24/titanic-data-exploration"
   },
   {
     id: 5,
@@ -104,7 +108,8 @@ const githubProjects = [
       "Visualisations interactives élaborées",
       "Statistiques descriptives complètes"
     ],
-    color: "from-red-500 to-rose-500"
+    color: "from-red-500 to-rose-500",
+    url: "https://github.com/Jcalixte24/netflix"
   },
   {
     id: 6,
@@ -124,7 +129,8 @@ const githubProjects = [
       "Utilisation de modèles pré-entraînés",
       "Pipeline de computer vision complet"
     ],
-    color: "from-indigo-500 to-purple-500"
+    color: "from-indigo-500 to-purple-500",
+    url: "https://github.com/Jcalixte24/objet-detection"
   },
   {
     id: 7,
@@ -144,7 +150,8 @@ const githubProjects = [
       "Métriques D&I automatisées",
       "Interface Streamlit interactive"
     ],
-    color: "from-yellow-500 to-orange-500"
+    color: "from-yellow-500 to-orange-500",
+    url: "https://github.com/Jcalixte24/Evaluation-D-I"
   },
   {
     id: 8,
@@ -164,7 +171,8 @@ const githubProjects = [
       "Impact social positif",
       "Projet communautaire engagé"
     ],
-    color: "from-lime-500 to-green-500"
+    color: "from-lime-500 to-green-500",
+    url: "https://github.com/Jcalixte24/sauver-gaia"
   }
 ];
 
@@ -209,7 +217,7 @@ const GithubProjects = () => {
               {githubProjects.map((project, index) => (
                 <Card
                   key={project.id}
-                  className={`p-4 cursor-pointer transition-smooth hover-lift ${
+                  className={`p-4 cursor-pointer transition-smooth hover-lift relative overflow-hidden group ${
                     selectedProject.id === project.id
                       ? "border-2 border-primary shadow-glow-strong"
                       : "hover:border-primary/50"
@@ -217,8 +225,9 @@ const GithubProjects = () => {
                   onClick={() => setSelectedProject(project)}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                  <div className="flex items-start gap-3">
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${project.color} flex-shrink-0`}></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-accent/5 opacity-0 group-hover:opacity-100 transition-smooth"></div>
+                  <div className="flex items-start gap-3 relative z-10">
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${project.color} flex-shrink-0 group-hover:scale-110 transition-bounce`}></div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold truncate">{project.name}</h3>
                       <p className="text-sm text-muted-foreground line-clamp-2">
@@ -242,12 +251,15 @@ const GithubProjects = () => {
 
             {/* Selected Project Details */}
             <div className="lg:col-span-2">
-              <Card className="p-8 glass-card animate-fade-in">
+              <Card className="p-8 glass-card animate-fade-in relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 opacity-50"></div>
+                
                 {/* Project Header */}
-                <div className="mb-8">
-                  <div className={`h-32 rounded-lg bg-gradient-to-br ${selectedProject.color} mb-6 flex items-center justify-center relative overflow-hidden`}>
+                <div className="mb-8 relative z-10">
+                  <div className={`h-32 rounded-lg bg-gradient-to-br ${selectedProject.color} mb-6 flex items-center justify-center relative overflow-hidden group`}>
                     <div className="absolute inset-0 bg-black/20"></div>
-                    <Github className="w-20 h-20 text-white relative z-10" />
+                    <div className="absolute inset-0 animate-shimmer"></div>
+                    <Github className="w-20 h-20 text-white relative z-10 group-hover:scale-110 transition-bounce" />
                   </div>
                   
                   <h2 className="text-3xl font-bold mb-3">{selectedProject.name}</h2>
@@ -306,16 +318,10 @@ const GithubProjects = () => {
 
                   {/* Actions */}
                   <div className="flex gap-4">
-                    <Button className="flex-1 gap-2" asChild>
-                      <a href="https://github.com/Jcalixte24" target="_blank" rel="noopener noreferrer">
+                    <Button className="flex-1 gap-2 shadow-glow-strong" asChild>
+                      <a href={selectedProject.url || "https://github.com/Jcalixte24"} target="_blank" rel="noopener noreferrer">
                         <Github className="w-4 h-4" />
                         Voir sur GitHub
-                      </a>
-                    </Button>
-                    <Button variant="outline" className="flex-1 gap-2" asChild>
-                      <a href="https://github.com/Jcalixte24" target="_blank" rel="noopener noreferrer">
-                        <ExternalLink className="w-4 h-4" />
-                        Demo Live
                       </a>
                     </Button>
                   </div>
