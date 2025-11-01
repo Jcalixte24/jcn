@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Github, Linkedin, Mail, Download, ChevronDown } from "lucide-react";
 import heroBg from "@/assets/hero-bg.jpg";
-import profileImg from "@/assets/profile-placeholder.jpg";
+import profileImg from "@/assets/japhet-profile.jpg";
 
 const Hero = () => {
   return (
@@ -35,9 +35,9 @@ const Hero = () => {
               
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Passionné par l'intelligence artificielle et la data science, 
-                étudiant au Programme Grande École de l'IA Institut Paris by EPITA. 
-                Mon ambition : devenir un expert reconnu et contribuer à la 
-                transformation numérique de la Côte d'Ivoire et au-delà.
+                étudiant en 2ème année au Programme Grande École de l'IA Institut Paris by EPITA. 
+                Mon ambition : devenir un expert reconnu internationalement et contribuer à la 
+                transformation numérique de la Côte d'Ivoire et de l'ensemble du continent africain.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-4">

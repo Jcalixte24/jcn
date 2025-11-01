@@ -6,44 +6,68 @@ import { Link } from "react-router-dom";
 
 const projects = [
   {
+    title: "Sokoban CLI",
+    description: "Jeu de Sokoban complet jouable dans la console, développé en Python. Implémentation d'algorithmes de pathfinding et logique de jeu avec interface en ligne de commande.",
+    period: "Septembre 2024",
+    tags: ["Python", "Game Dev", "Algorithmes", "CLI"],
+    link: null,
+    github: "https://github.com/Jcalixte24/sokoban-CLI"
+  },
+  {
+    title: "Flight Prediction ML",
+    description: "Modèle de machine learning pour prédire les retards de vols. Analyse de données historiques avec feature engineering avancé et optimisation des performances.",
+    period: "Avril 2025",
+    tags: ["Machine Learning", "Python", "Jupyter", "Data Science", "Prédiction"],
+    link: null,
+    github: "https://github.com/Jcalixte24/Flight-prediction"
+  },
+  {
+    title: "Abidjan Route Finder",
+    description: "Application web de recherche d'itinéraires optimaux à Abidjan. Implémentation d'algorithmes de graphes pour trouver les meilleurs chemins dans la ville.",
+    period: "Octobre 2025",
+    tags: ["Algorithmes", "Web", "CSS", "Graphes", "Optimisation"],
+    link: null,
+    github: "https://github.com/Jcalixte24/abidjan-route-finder"
+  },
+  {
+    title: "Titanic Data Exploration",
+    description: "Analyse exploratoire complète du dataset Titanic. Visualisations de données, feature engineering et prédiction de survie avec différents modèles ML.",
+    period: "Janvier 2025",
+    tags: ["Data Science", "Python", "Jupyter", "EDA", "Visualisation"],
+    link: null,
+    github: "https://github.com/Jcalixte24/titanic-data-exploration"
+  },
+  {
+    title: "Netflix Data Analysis",
+    description: "Analyse approfondie des données Netflix : tendances de contenu, patterns de visionnage et insights sur le catalogue. Visualisations interactives et statistiques.",
+    period: "Janvier 2025",
+    tags: ["Python", "Data Analysis", "Pandas", "Visualization"],
+    link: null,
+    github: "https://github.com/Jcalixte24/netflix"
+  },
+  {
+    title: "Objet Detection",
+    description: "Système de détection d'objets utilisant des techniques de computer vision et deep learning. Application pratique de modèles pré-entraînés.",
+    period: "Janvier 2025",
+    tags: ["Computer Vision", "Deep Learning", "Python", "AI"],
+    link: null,
+    github: "https://github.com/Jcalixte24/objet-detection"
+  },
+  {
     title: "Évaluateur Diversité & Inclusion",
-    description: "Réalisation d'un outil d'évaluation pour calculer le score de diversité et d'inclusion des entreprises. Analyse de données issues de data.gouv.fr avec visualisations interactives.",
-    period: "Septembre 2024 - Mai 2025",
-    tags: ["Python", "Data Analysis", "PowerBI", "Pandas", "Datavisualisation"],
+    description: "Outil d'évaluation pour calculer le score de diversité et d'inclusion des entreprises. Analyse de données issues de data.gouv.fr avec dashboards PowerBI.",
+    period: "Mai 2025",
+    tags: ["Python", "PowerBI", "Data Analysis", "Streamlit"],
     link: null,
-    github: "https://github.com/Jcalixte24"
+    github: "https://github.com/Jcalixte24/Evaluation-D-I"
   },
   {
-    title: "Dashboard QuantCube Technology",
-    description: "Création d'un dashboard interactif de suivi des données de marchés et données QuantCube pour Data Analystes et économistes. Transformation de besoins métiers en visualisations percutantes.",
-    period: "Mai 2025 - Juin 2025",
-    tags: ["PowerBI", "SQL", "Excel", "Dashboard", "Data Viz"],
+    title: "Sauver Gaia",
+    description: "Projet récent axé sur l'environnement et la durabilité. Application Python pour sensibiliser et agir pour la planète.",
+    period: "Octobre 2025",
+    tags: ["Python", "Environnement", "Data", "Impact Social"],
     link: null,
-    github: null
-  },
-  {
-    title: "Nuit du Code 2024",
-    description: "Projet de programmation réalisé lors d'un concours prestigieux en terminale. Développement d'une solution complète sous pression temporelle (6h) en équipe.",
-    period: "Septembre 2023 - Mai 2024",
-    tags: ["Python", "Team Work", "Compétition", "Problem Solving"],
-    link: null,
-    github: "https://github.com/Jcalixte24"
-  },
-  {
-    title: "Voiture Autonome Arduino",
-    description: "Conception innovante d'un prototype de voiture autonome utilisant Arduino et programmation C++. Intégration de capteurs et système de reconnaissance de feux tricolores.",
-    period: "Juillet 2022",
-    tags: ["Arduino", "C++", "IoT", "Robotique", "Computer Vision"],
-    link: null,
-    github: null
-  },
-  {
-    title: "Recherche Astronomique - Astronometrica",
-    description: "Contribution active à des projets de recherche panafricains en astronomie. Certification IASC pour contribution significative à la recherche astronomique internationale.",
-    period: "Janvier 2024 - Présent",
-    tags: ["Recherche", "Astronomie", "Data Analysis", "Collaboration"],
-    link: null,
-    github: null
+    github: "https://github.com/Jcalixte24/sauver-gaia"
   }
 ];
 

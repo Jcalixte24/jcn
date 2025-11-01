@@ -17,7 +17,7 @@ const About = () => {
             {/* Left: Description */}
             <div className="space-y-6">
               <p className="text-lg leading-relaxed text-muted-foreground">
-                Je suis actuellement étudiant en première année au sein du prestigieux 
+                Je suis actuellement étudiant en deuxième année au sein du prestigieux 
                 <span className="text-foreground font-semibold"> Programme Grande École de l'IA Institut Paris by EPITA</span>. 
                 Mon parcours est marqué par une passion profonde pour l'intelligence artificielle 
                 et la science des données.
@@ -32,7 +32,8 @@ const About = () => {
               <p className="text-lg leading-relaxed text-muted-foreground">
                 Mon ambition est claire : devenir un expert de renommée internationale en IA 
                 et data science, tout en étant un moteur clé de la transformation numérique 
-                de mon pays d'origine et en générant un impact positif à l'échelle mondiale.
+                de la Côte d'Ivoire et de l'ensemble du continent africain, et en générant 
+                un impact positif à l'échelle mondiale.
               </p>
             </div>
 
@@ -62,7 +63,7 @@ const About = () => {
                     <h3 className="font-semibold text-lg mb-2">Vision Mondiale</h3>
                     <p className="text-muted-foreground">
                       Contribuer à la transformation numérique de la Côte d'Ivoire 
-                      et générer un impact positif à l'échelle planétaire.
+                      et de tout le continent africain, avec un impact positif mondial.
                     </p>
                   </div>
                 </div>

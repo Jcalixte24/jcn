@@ -8,123 +8,163 @@ import { Link } from "react-router-dom";
 const githubProjects = [
   {
     id: 1,
-    name: "Évaluateur D&I",
-    description: "Outil d'évaluation de la diversité et de l'inclusion des entreprises avec analyse de données et visualisations interactives.",
-    longDescription: "Application complète d'analyse de données pour évaluer le score de diversité et d'inclusion des entreprises françaises. Utilise des données gouvernementales (data.gouv.fr) pour générer des rapports détaillés avec visualisations PowerBI et Python.",
-    technologies: ["Python", "Pandas", "PowerBI", "NumPy", "Matplotlib"],
+    name: "Sokoban CLI",
+    description: "Jeu de Sokoban complet jouable dans la console, développé en Python avec algorithmes de pathfinding.",
+    longDescription: "Implémentation complète du jeu Sokoban jouable directement dans la console. Développement d'algorithmes de pathfinding pour résoudre les niveaux, gestion des collisions et logique de jeu robuste. Interface en ligne de commande interactive avec système de niveaux progressifs.",
+    technologies: ["Python", "Game Dev", "Algorithmes", "CLI", "Logique"],
     stats: {
-      stars: 12,
-      forks: 3,
+      stars: 0,
+      forks: 0,
       language: "Python",
-      size: "2.4 MB"
+      size: "125 KB"
     },
     highlights: [
-      "Analyse de +50,000 lignes de données",
-      "Dashboard interactif PowerBI",
-      "Algorithme de scoring personnalisé",
-      "Export PDF automatisé"
+      "Logique de jeu complète et robuste",
+      "Interface console interactive",
+      "Algorithmes de pathfinding optimisés",
+      "Système de niveaux progressifs"
     ],
     color: "from-blue-500 to-cyan-500"
   },
   {
     id: 2,
-    name: "Dashboard QuantCube",
-    description: "Dashboard de suivi des données de marchés financiers pour analystes et économistes.",
-    longDescription: "Solution de visualisation professionnelle développée lors de mon stage chez QuantCube Technology. Permet aux data analystes et économistes de suivre en temps réel les données de marchés avec des indicateurs personnalisables.",
-    technologies: ["PowerBI", "SQL", "Excel", "DAX"],
+    name: "Flight Prediction ML",
+    description: "Modèle de machine learning pour prédire les retards de vols avec feature engineering avancé.",
+    longDescription: "Modèle sophistiqué de machine learning utilisant des données historiques de vols pour prédire les retards. Feature engineering avancé incluant variables temporelles, météorologiques et opérationnelles. Optimisation des hyperparamètres et comparaison de plusieurs algorithmes ML.",
+    technologies: ["Machine Learning", "Python", "Scikit-learn", "Pandas", "Jupyter"],
     stats: {
-      stars: 8,
-      forks: 2,
-      language: "SQL",
-      size: "1.8 MB"
+      stars: 0,
+      forks: 0,
+      language: "Jupyter Notebook",
+      size: "2.4 MB"
     },
     highlights: [
-      "Intégration multi-sources de données",
-      "Requêtes SQL optimisées",
-      "Visualisations temps réel",
-      "Interface utilisateur intuitive"
+      "Feature engineering avancé",
+      "Optimisation d'hyperparamètres",
+      "Analyse temporelle des retards",
+      "Visualisations interactives complètes"
     ],
     color: "from-purple-500 to-pink-500"
   },
   {
     id: 3,
-    name: "Nuit du Code 2024",
-    description: "Projet de compétition de programmation réalisé en 6h en équipe lors d'un concours prestigieux.",
-    longDescription: "Solution complète développée lors de la Nuit du Code 2024, un concours de programmation intensif. Travail d'équipe sous pression pour résoudre des problèmes algorithmiques complexes avec Python.",
-    technologies: ["Python", "Algorithmes", "NumPy", "TkInter"],
+    name: "Abidjan Route Finder",
+    description: "Application web pour trouver les itinéraires optimaux à Abidjan avec algorithmes de graphes.",
+    longDescription: "Application web innovante dédiée à la navigation dans Abidjan. Implémentation d'algorithmes de graphes (Dijkstra, A*) pour calculer les chemins les plus courts. Interface utilisateur intuitive permettant de visualiser les itinéraires et d'optimiser les trajets dans la ville.",
+    technologies: ["Algorithmes", "Graphes", "CSS", "JavaScript", "Web"],
     stats: {
-      stars: 15,
-      forks: 5,
-      language: "Python",
-      size: "980 KB"
+      stars: 0,
+      forks: 0,
+      language: "CSS",
+      size: "890 KB"
     },
     highlights: [
-      "Développement sous pression (6h)",
-      "Algorithmes optimisés",
-      "Interface graphique complète",
-      "Travail d'équipe efficace"
-    ],
-    color: "from-orange-500 to-red-500"
-  },
-  {
-    id: 4,
-    name: "Voiture Autonome Arduino",
-    description: "Prototype de voiture autonome avec reconnaissance de feux tricolores utilisant Arduino et C++.",
-    longDescription: "Projet IoT innovant combinant hardware et software. Voiture autonome équipée de capteurs ultrasoniques, module de reconnaissance de couleurs pour les feux tricolores, et système de navigation basique.",
-    technologies: ["Arduino", "C++", "IoT", "Capteurs"],
-    stats: {
-      stars: 20,
-      forks: 7,
-      language: "C++",
-      size: "540 KB"
-    },
-    highlights: [
-      "Reconnaissance de feux tricolores",
-      "Navigation autonome",
-      "Intégration de multiples capteurs",
-      "Code C++ optimisé pour microcontrôleur"
+      "Algorithmes Dijkstra et A*",
+      "Interface utilisateur moderne",
+      "Optimisation de parcours urbains",
+      "Application locale pour Abidjan"
     ],
     color: "from-green-500 to-teal-500"
   },
   {
-    id: 5,
-    name: "Astronometrica Research",
-    description: "Contribution à des projets de recherche astronomique panafricains avec analyse de données spatiales.",
-    longDescription: "Participation active à l'Association Ivoirienne d'Astronomie (AIA) avec contribution à des projets de recherche internationale. Certifié par l'IASC pour contribution significative à la recherche astronomique.",
-    technologies: ["Python", "Data Analysis", "Astronomie", "Research"],
+    id: 4,
+    name: "Titanic Data Exploration",
+    description: "Analyse exploratoire approfondie du dataset Titanic avec visualisations et prédictions ML.",
+    longDescription: "Analyse exploratoire complète du célèbre dataset Titanic. Nettoyage de données, feature engineering créatif et visualisations professionnelles. Développement de modèles de classification pour prédire la survie des passagers avec comparaison de différents algorithmes ML.",
+    technologies: ["Data Science", "Python", "Pandas", "Matplotlib", "Seaborn"],
     stats: {
-      stars: 18,
-      forks: 4,
-      language: "Python",
-      size: "3.2 MB"
+      stars: 0,
+      forks: 0,
+      language: "Jupyter Notebook",
+      size: "1.85 MB"
     },
     highlights: [
-      "Certification IASC obtenue",
-      "Analyse de données astronomiques",
-      "Collaboration internationale",
-      "Publications scientifiques"
+      "Exploration de données détaillée",
+      "Visualisations professionnelles",
+      "Feature engineering créatif",
+      "Comparaison de modèles ML"
+    ],
+    color: "from-orange-500 to-red-500"
+  },
+  {
+    id: 5,
+    name: "Netflix Data Analysis",
+    description: "Analyse complète des données Netflix : tendances, patterns de visionnage et insights sur le catalogue.",
+    longDescription: "Analyse approfondie des données Netflix explorant les tendances de contenu, patterns de visionnage et évolution du catalogue. Génération d'insights sur les types de contenu populaires, distribution géographique et temporelle. Visualisations interactives avec statistiques descriptives avancées.",
+    technologies: ["Python", "Data Analysis", "Pandas", "Visualization", "EDA"],
+    stats: {
+      stars: 0,
+      forks: 0,
+      language: "Python",
+      size: "1.52 MB"
+    },
+    highlights: [
+      "Analyse de tendances temporelles",
+      "Insights sur le catalogue global",
+      "Visualisations interactives élaborées",
+      "Statistiques descriptives complètes"
+    ],
+    color: "from-red-500 to-rose-500"
+  },
+  {
+    id: 6,
+    name: "Object Detection",
+    description: "Système de détection d'objets utilisant computer vision et deep learning avec modèles pré-entraînés.",
+    longDescription: "Système de détection d'objets exploitant des techniques avancées de computer vision et deep learning. Application pratique de modèles pré-entraînés (YOLO, SSD) sur des cas réels. Implémentation de pipelines de traitement d'images et détection en temps réel.",
+    technologies: ["Computer Vision", "Deep Learning", "Python", "TensorFlow", "AI"],
+    stats: {
+      stars: 0,
+      forks: 0,
+      language: "Python",
+      size: "980 KB"
+    },
+    highlights: [
+      "Détection d'objets en temps réel",
+      "Deep learning appliqué",
+      "Utilisation de modèles pré-entraînés",
+      "Pipeline de computer vision complet"
     ],
     color: "from-indigo-500 to-purple-500"
   },
   {
-    id: 6,
-    name: "Machine Learning Portfolio",
-    description: "Collection de modèles de machine learning développés durant ma formation à l'IA Institut.",
-    longDescription: "Portfolio de projets ML incluant classification, régression, clustering et réseaux de neurones. Utilisation de scikit-learn, TensorFlow et visualisations avec Matplotlib.",
-    technologies: ["Python", "TensorFlow", "Scikit-learn", "Jupyter"],
+    id: 7,
+    name: "Évaluation D&I",
+    description: "Outil d'évaluation de diversité et inclusion avec analyse de données publiques et dashboards PowerBI.",
+    longDescription: "Outil professionnel d'évaluation pour calculer le score de diversité et d'inclusion des entreprises. Exploitation de données issues de data.gouv.fr avec pipeline ETL complet. Création de dashboards PowerBI interactifs et interface Streamlit pour l'analyse.",
+    technologies: ["Python", "PowerBI", "Data Analysis", "Streamlit", "ETL"],
     stats: {
-      stars: 25,
-      forks: 10,
+      stars: 0,
+      forks: 1,
       language: "Python",
-      size: "4.1 MB"
+      size: "3.2 MB"
     },
     highlights: [
-      "Modèles de classification avancés",
-      "Réseaux de neurones profonds",
-      "Notebooks Jupyter documentés",
-      "Datasets personnalisés"
+      "Dashboard PowerBI professionnel",
+      "Analyse de données publiques françaises",
+      "Métriques D&I automatisées",
+      "Interface Streamlit interactive"
     ],
     color: "from-yellow-500 to-orange-500"
+  },
+  {
+    id: 8,
+    name: "Sauver Gaia",
+    description: "Projet environnemental de sensibilisation aux enjeux écologiques avec analyse de données.",
+    longDescription: "Projet récent axé sur l'environnement et la durabilité. Application Python pour sensibiliser aux enjeux écologiques et promouvoir des actions concrètes. Analyse de données environnementales et visualisations pour communiquer l'urgence climatique.",
+    technologies: ["Python", "Environnement", "Data", "Impact Social", "Visualisation"],
+    stats: {
+      stars: 0,
+      forks: 0,
+      language: "Python",
+      size: "450 KB"
+    },
+    highlights: [
+      "Sensibilisation environnementale",
+      "Analyse de données écologiques",
+      "Impact social positif",
+      "Projet communautaire engagé"
+    ],
+    color: "from-lime-500 to-green-500"
   }
 ];
 
@@ -154,7 +194,7 @@ const GithubProjects = () => {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Explorez mes projets de data science, machine learning et développement
+              Explorez mes vrais projets GitHub : data science, machine learning, algorithmes et applications web
             </p>
           </div>
 

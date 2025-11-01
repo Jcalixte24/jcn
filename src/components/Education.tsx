@@ -7,7 +7,7 @@ const education = [
     degree: "Programme Grande École - IA & Data Science",
     institution: "IA Institut Paris by EPITA & ISG",
     location: "Kremlin-Bicêtre, France",
-    year: "2024 - Présent",
+    year: "2024 - Présent (2ème année)",
     description: "Formation d'excellence en intelligence artificielle, data science et data engineering.",
     highlights: [
       "Data Science, Data Analyse et Data Engineering",
