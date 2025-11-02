@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { GraduationCap, Award } from "lucide-react";
+import { GraduationCap, Award, ExternalLink } from "lucide-react";
 
 const education = [
   {
@@ -47,6 +47,37 @@ const education = [
       "Expertise en programmation et algorithmique"
     ],
     icon: GraduationCap
+  }
+];
+
+const certifications = [
+  {
+    title: "Learning AI Through Visualization",
+    organization: "Columbia+",
+    count: 6,
+    year: "Juillet 2025",
+    description: "Série complète de certifications en intelligence artificielle et visualisation de données.",
+    skills: ["Python", "IA", "Data Visualization", "Machine Learning"],
+    link: "https://badges.plus.columbia.edu/6b080fba-688b-4d02-b8c5-637a815166e0#acc.DpFOTCJ8"
+  },
+  {
+    title: "Google Data Analytics Professional Certificate",
+    organization: "Google (via Coursera)",
+    count: 8,
+    year: "Juin 2025",
+    description: "Certification professionnelle complète en analyse de données avec Google.",
+    skills: [
+      "Présentation de données",
+      "Business Analytics",
+      "Data Cleaning",
+      "Database Management",
+      "R Programming",
+      "tidyverse",
+      "ggplot",
+      "Data Ethics",
+      "Interactive Data Visualization"
+    ],
+    link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
   }
 ];
 
@@ -117,6 +148,65 @@ const Education = () => {
                 </Card>
               );
             })}
+          </div>
+
+          {/* Certifications */}
+          <div className="mb-12">
+            <h3 className="text-2xl font-bold mb-6">Certifications Professionnelles</h3>
+            <div className="grid gap-6">
+              {certifications.map((cert, index) => (
+                <Card 
+                  key={index} 
+                  className="p-6 hover-lift glass-card animate-fade-in"
+                  style={{ animationDelay: `${(education.length + index) * 0.1}s` }}
+                >
+                  <div className="flex flex-col md:flex-row gap-6">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <Award className="w-6 h-6 text-accent" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h4 className="text-xl font-semibold mb-2">
+                            {cert.title}
+                            {cert.count && <Badge variant="secondary" className="ml-2">{cert.count} certifications</Badge>}
+                          </h4>
+                          <p className="text-lg text-primary font-medium mb-1">{cert.organization}</p>
+                          <p className="text-sm text-muted-foreground mb-3">{cert.year}</p>
+                        </div>
+                      </div>
+                      
+                      <p className="text-muted-foreground leading-relaxed">
+                        {cert.description}
+                      </p>
+                      
+                      <div className="flex flex-wrap gap-2">
+                        {cert.skills.map((skill, idx) => (
+                          <Badge key={idx} variant="outline">
+                            {skill}
+                          </Badge>
+                        ))}
+                      </div>
+                      
+                      {cert.link && (
+                        <a 
+                          href={cert.link} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 text-primary hover:underline mt-2"
+                        >
+                          <ExternalLink className="w-4 h-4" />
+                          <span>Voir la certification</span>
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
           </div>
 
           {/* Additional Training */}

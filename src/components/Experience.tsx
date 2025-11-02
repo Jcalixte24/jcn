@@ -17,6 +17,20 @@ const experiences = [
     tags: ["PowerBI", "Excel", "SQL", "Data Visualisation"]
   },
   {
+    title: "Développeur Web",
+    company: "Myll Production",
+    location: "Abidjan, Côte d'Ivoire · À distance",
+    period: "Février 2023 - Février 2025",
+    description: "En tant que Développeur Web freelance pour Myll Production, je conçois et développe des solutions web adaptées à leurs besoins spécifiques.",
+    highlights: [
+      "Création de sites web responsives",
+      "Intégration d'outils d'analyse (Google Analytics)",
+      "Amélioration des performances web",
+      "Accompagnement musical et communication digitale"
+    ],
+    tags: ["Développement web", "Web analytique", "Responsive Design", "Google Analytics"]
+  },
+  {
     title: "Membre Actif",
     company: "Association Ivoirienne d'Astronomie (AIA)",
     location: "Abidjan, Côte d'Ivoire",
