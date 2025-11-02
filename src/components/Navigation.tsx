@@ -35,8 +35,9 @@ const Navigation = () => {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <a href="#home" className="text-xl font-bold">
-            JC<span className="text-primary">.</span>
+          <a href="#home" className="text-xl font-bold group">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">JCN</span>
+            <span className="text-primary group-hover:animate-pulse-glow">.</span>
           </a>
 
           {/* Desktop Menu */}

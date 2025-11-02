@@ -20,7 +20,7 @@ const experiences = [
     title: "Membre Actif",
     company: "Association Ivoirienne d'Astronomie (AIA)",
     location: "Abidjan, Côte d'Ivoire",
-    period: "Janvier 2024 - Présent",
+    period: "Janvier 2024 - Septembre 2025",
     description: "Participation active à des projets de recherche panafricains sur Astronometrica.",
     highlights: [
       "Certifié par The International Astronomical Search Collaboration (IASC)",

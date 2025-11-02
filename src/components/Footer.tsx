@@ -11,10 +11,11 @@ const Footer = () => {
             {/* Brand */}
             <div>
               <h3 className="text-xl font-bold mb-4">
-                JC<span className="text-primary">.</span>
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">JCN</span>
+                <span className="text-primary">.</span>
               </h3>
               <p className="text-muted-foreground">
-                Junior Data Analyst passionné par l'IA et la transformation numérique.
+                Junior Data Analyst passionné par l'IA et la transformation numérique de l'Afrique.
               </p>
             </div>
 
@@ -66,7 +67,7 @@ const Footer = () => {
           </div>
 
           <div className="border-t border-border pt-8 text-center text-muted-foreground">
-            <p>© {currentYear} Japhet Calixte. Tous droits réservés.</p>
+            <p>© {currentYear} Japhet Calixte N'DRI. Tous droits réservés.</p>
           </div>
         </div>
       </div>
