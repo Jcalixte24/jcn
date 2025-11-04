@@ -1,10 +1,72 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Mail, MapPin, Phone, Github, Linkedin, Send } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { z } from "zod";
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut dépasser 100 caractères"),
+  email: z.string().trim().email("Email invalide").max(255, "L'email ne peut dépasser 255 caractères"),
+  message: z.string().trim().min(1, "Le message est requis").max(1000, "Le message ne peut dépasser 1000 caractères"),
+});
 
 const Contact = () => {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [message, setMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation
+    try {
+      contactSchema.parse({ name, email, message });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast({
+          title: "Erreur de validation",
+          description: error.errors[0].message,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('send-contact-email', {
+        body: { name, email, message }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Message envoyé !",
+        description: "Merci pour votre message. Je vous répondrai bientôt.",
+      });
+
+      // Reset form
+      setName("");
+      setEmail("");
+      setMessage("");
+    } catch (error: any) {
+      console.error("Error sending email:", error);
+      toast({
+        title: "Erreur d'envoi",
+        description: "Une erreur est survenue. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <section id="contact" className="py-20">
       <div className="container mx-auto px-4">
@@ -107,7 +169,7 @@ const Contact = () => {
 
             {/* Contact Form */}
             <Card className="p-6 md:p-8">
-              <form className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-2">
                     Nom
@@ -116,6 +178,10 @@ const Contact = () => {
                     id="name"
                     placeholder="Votre nom"
                     className="w-full"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    required
+                    maxLength={100}
                   />
                 </div>
 
@@ -128,6 +194,10 @@ const Contact = () => {
                     type="email"
                     placeholder="votre.email@exemple.com"
                     className="w-full"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    maxLength={255}
                   />
                 </div>
 
@@ -140,6 +210,10 @@ const Contact = () => {
                     placeholder="Votre message..."
                     rows={6}
                     className="w-full"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    required
+                    maxLength={1000}
                   />
                 </div>
 
@@ -147,9 +221,10 @@ const Contact = () => {
                   type="submit" 
                   size="lg" 
                   className="w-full gap-2"
+                  disabled={isLoading}
                 >
                   <Send className="w-4 h-4" />
-                  Envoyer le Message
+                  {isLoading ? "Envoi en cours..." : "Envoyer le Message"}
                 </Button>
               </form>
             </Card>
