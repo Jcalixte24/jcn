@@ -59,9 +59,16 @@ const Hero = () => {
                     <Mail className="w-4 h-4 group-hover:rotate-12 transition-smooth" />
                   </a>
                 </Button>
-                <Button size="lg" variant="outline" className="gap-2 hover-lift group border-2 border-primary/30 hover:border-primary">
-                  <Download className="w-4 h-4 group-hover:translate-y-1 transition-smooth" />
-                  Télécharger CV
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="gap-2 hover-lift group border-2 border-primary/30 hover:border-primary"
+                  asChild
+                >
+                  <a href="#contact">
+                    <Download className="w-4 h-4 group-hover:translate-y-1 transition-smooth" />
+                    Télécharger CV
+                  </a>
                 </Button>
               </div>
 
