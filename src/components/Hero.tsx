@@ -65,7 +65,7 @@ const Hero = () => {
                   className="gap-2 hover-lift group border-2 border-primary/30 hover:border-primary"
                   asChild
                 >
-                  <a href="#contact">
+                  <a href="https://cv-jcn.lovable.app/" target="_blank" rel="noopener noreferrer">
                     <Download className="w-4 h-4 group-hover:translate-y-1 transition-smooth" />
                     Télécharger CV
                   </a>
