@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,17 +9,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const contactSchema = z.object({
-  name: z.string().trim().min(1, "Le nom est requis").max(100, "Le nom ne peut dépasser 100 caractères"),
+  name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100, "Le nom ne peut dépasser 100 caractères"),
   email: z.string().trim().email("Email invalide").max(255, "L'email ne peut dépasser 255 caractères"),
-  message: z.string().trim().min(1, "Le message est requis").max(1000, "Le message ne peut dépasser 1000 caractères"),
+  message: z.string().trim().min(10, "Le message doit contenir au moins 10 caractères").max(2000, "Le message ne peut dépasser 2000 caractères"),
 });
 
 const Contact = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
+  const [honeypot, setHoneypot] = useState(""); // Hidden field for bots
+  const [formLoadTime, setFormLoadTime] = useState<number>(Date.now());
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Record form load time for bot detection
+  useEffect(() => {
+    setFormLoadTime(Date.now());
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,10 +49,37 @@ const Contact = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke('send-contact-email', {
-        body: { name, email, message }
+        body: { 
+          name, 
+          email, 
+          message,
+          honeypot, // Send honeypot value
+          timestamp: formLoadTime // Send form load timestamp
+        }
       });
 
-      if (error) throw error;
+      if (error) {
+        // Handle specific error responses
+        if (error.message?.includes('429') || error.message?.includes('Limite')) {
+          toast({
+            title: "Limite atteinte",
+            description: "Vous avez envoyé trop de messages. Réessayez dans 1 heure.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
+      // Check for backend validation errors
+      if (data && !data.success && data.error) {
+        toast({
+          title: "Erreur",
+          description: data.error,
+          variant: "destructive",
+        });
+        return;
+      }
 
       toast({
         title: "Message envoyé !",
@@ -56,8 +90,21 @@ const Contact = () => {
       setName("");
       setEmail("");
       setMessage("");
+      setHoneypot("");
+      setFormLoadTime(Date.now()); // Reset timestamp
     } catch (error: any) {
       console.error("Error sending email:", error);
+      
+      // Check if it's a rate limit error
+      if (error?.status === 429) {
+        toast({
+          title: "Limite atteinte",
+          description: "Vous avez envoyé trop de messages. Réessayez dans 1 heure.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
       toast({
         title: "Erreur d'envoi",
         description: "Une erreur est survenue. Veuillez réessayer.",
@@ -67,6 +114,7 @@ const Contact = () => {
       setIsLoading(false);
     }
   };
+  
   return (
     <section id="contact" className="py-20">
       <div className="container mx-auto px-4">
@@ -170,6 +218,18 @@ const Contact = () => {
             {/* Contact Form */}
             <Card className="p-6 md:p-8">
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Honeypot field - hidden from real users, bots will fill it */}
+                <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
+                  <Input 
+                    type="text"
+                    name="website"
+                    tabIndex={-1}
+                    autoComplete="off"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                  />
+                </div>
+
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium mb-2">
                     Nom
@@ -181,6 +241,7 @@ const Contact = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
+                    minLength={2}
                     maxLength={100}
                   />
                 </div>
@@ -203,7 +264,7 @@ const Contact = () => {
 
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium mb-2">
-                    Message
+                    Message <span className="text-muted-foreground text-xs">({message.length}/2000)</span>
                   </label>
                   <Textarea 
                     id="message"
@@ -213,7 +274,8 @@ const Contact = () => {
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     required
-                    maxLength={1000}
+                    minLength={10}
+                    maxLength={2000}
                   />
                 </div>
 
@@ -226,6 +288,10 @@ const Contact = () => {
                   <Send className="w-4 h-4" />
                   {isLoading ? "Envoi en cours..." : "Envoyer le Message"}
                 </Button>
+                
+                <p className="text-xs text-muted-foreground text-center">
+                  Maximum 3 messages par heure pour éviter les abus.
+                </p>
               </form>
             </Card>
           </div>
