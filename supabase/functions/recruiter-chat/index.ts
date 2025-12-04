@@ -5,13 +5,124 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Rate limiting for chatbot
+const chatRateLimitMap = new Map<string, { count: number; firstRequest: number }>();
+const CHAT_RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+const MAX_CHAT_REQUESTS_PER_WINDOW = 10; // Max 10 messages per minute
+
+// Validation constants
+const MAX_MESSAGE_LENGTH = 1000;
+const MAX_MESSAGES_IN_HISTORY = 20;
+const VALID_ROLES = ['user', 'assistant'];
+
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
+// Validate a single message
+function isValidMessage(msg: unknown): msg is ChatMessage {
+  if (!msg || typeof msg !== 'object') return false;
+  const m = msg as Record<string, unknown>;
+  
+  if (typeof m.role !== 'string' || !VALID_ROLES.includes(m.role)) return false;
+  if (typeof m.content !== 'string') return false;
+  if (m.content.length > MAX_MESSAGE_LENGTH) return false;
+  if (m.content.trim().length === 0) return false;
+  
+  return true;
+}
+
+// Validate messages array
+function validateMessages(messages: unknown): { valid: boolean; error?: string; sanitized?: ChatMessage[] } {
+  if (!Array.isArray(messages)) {
+    return { valid: false, error: "Format de messages invalide" };
+  }
+  
+  if (messages.length === 0) {
+    return { valid: false, error: "Aucun message fourni" };
+  }
+  
+  if (messages.length > MAX_MESSAGES_IN_HISTORY) {
+    return { valid: false, error: `Trop de messages (max: ${MAX_MESSAGES_IN_HISTORY})` };
+  }
+  
+  const sanitized: ChatMessage[] = [];
+  for (const msg of messages) {
+    if (!isValidMessage(msg)) {
+      return { valid: false, error: "Message mal formaté ou trop long" };
+    }
+    // Sanitize content - remove potential injection attempts
+    sanitized.push({
+      role: msg.role,
+      content: msg.content.trim().slice(0, MAX_MESSAGE_LENGTH)
+    });
+  }
+  
+  return { valid: true, sanitized };
+}
+
+// Rate limit check
+function checkChatRateLimit(identifier: string): boolean {
+  const now = Date.now();
+  const record = chatRateLimitMap.get(identifier);
+  
+  if (!record) {
+    chatRateLimitMap.set(identifier, { count: 1, firstRequest: now });
+    return true;
+  }
+  
+  if (now - record.firstRequest > CHAT_RATE_LIMIT_WINDOW) {
+    chatRateLimitMap.set(identifier, { count: 1, firstRequest: now });
+    return true;
+  }
+  
+  if (record.count >= MAX_CHAT_REQUESTS_PER_WINDOW) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
+// Get client identifier from request
+function getClientIdentifier(req: Request): string {
+  // Try to get IP from various headers
+  const forwarded = req.headers.get('x-forwarded-for');
+  const realIp = req.headers.get('x-real-ip');
+  const cfIp = req.headers.get('cf-connecting-ip');
+  
+  return cfIp || realIp || forwarded?.split(',')[0] || 'unknown';
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { messages } = await req.json();
+    // Rate limiting
+    const clientId = getClientIdentifier(req);
+    if (!checkChatRateLimit(clientId)) {
+      console.log(`Chat rate limit exceeded for: ${clientId}`);
+      return new Response(
+        JSON.stringify({ error: "Trop de messages. Attendez un moment avant de réessayer." }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const body = await req.json();
+    const { messages } = body;
+    
+    // Validate messages
+    const validation = validateMessages(messages);
+    if (!validation.valid) {
+      return new Response(
+        JSON.stringify({ error: validation.error }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     
     if (!LOVABLE_API_KEY) {
@@ -90,7 +201,8 @@ INSTRUCTIONS IMPORTANTES:
 - Fournis des exemples concrets de projets quand c'est approprié
 - Si une question est trop personnelle ou hors sujet professionnel, redirige poliment vers les informations professionnelles
 - Réponds en français par défaut, mais adapte-toi à la langue du recruteur
-- NE POSE JAMAIS de questions au recruteur, contente-toi de répondre à ses questions`;
+- NE POSE JAMAIS de questions au recruteur, contente-toi de répondre à ses questions
+- NE DIVULGUE PAS d'informations personnelles sensibles au-delà de ce qui est fourni ici`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -102,7 +214,7 @@ INSTRUCTIONS IMPORTANTES:
         model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
-          ...messages,
+          ...validation.sanitized!,
         ],
         stream: true,
       }),
