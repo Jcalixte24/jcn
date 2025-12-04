@@ -23,10 +23,27 @@ function escapeHtml(unsafe: string): string {
     .replace(/'/g, "&#039;");
 }
 
+// List of disposable/temporary email domains to block
+const DISPOSABLE_EMAIL_DOMAINS = [
+  'tempmail.com', 'throwaway.email', 'guerrillamail.com', 'mailinator.com',
+  'temp-mail.org', 'fakeinbox.com', 'getnada.com', 'trashmail.com',
+  '10minutemail.com', 'yopmail.com', 'mohmal.com', 'maildrop.cc',
+  'sharklasers.com', 'guerrillamail.info', 'grr.la', 'spam4.me',
+  'dispostable.com', 'mailnesia.com', 'tempail.com', 'tempr.email',
+  'discard.email', 'spamgourmet.com', 'mytrashmail.com', 'mt2009.com',
+  'throwawaymail.com', 'jetable.org', 'anonymbox.com', 'emailondeck.com',
+  'fakemailgenerator.com', 'mintemail.com', 'mailcatch.com'
+];
+
 // Simple validation functions
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email) && email.length <= 255;
+}
+
+function isDisposableEmail(email: string): boolean {
+  const domain = email.split('@')[1]?.toLowerCase();
+  return domain ? DISPOSABLE_EMAIL_DOMAINS.includes(domain) : false;
 }
 
 function isValidName(name: string): boolean {
@@ -153,6 +170,15 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
+    // Check for disposable emails
+    if (isDisposableEmail(trimmedEmail)) {
+      console.log("Disposable email detected:", trimmedEmail);
+      return new Response(
+        JSON.stringify({ success: false, error: "Les emails temporaires ne sont pas acceptés. Veuillez utiliser une adresse email valide." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
     if (!isValidMessage(trimmedMessage)) {
       return new Response(
         JSON.stringify({ success: false, error: "Message invalide (10-2000 caractères)" }),
@@ -189,8 +215,8 @@ const handler = async (req: Request): Promise<Response> => {
     const safeEmail = escapeHtml(trimmedEmail);
     const safeMessage = escapeHtml(trimmedMessage).replace(/\n/g, '<br>');
 
-    // Send email to yourself
-    const emailResponse = await resend.emails.send({
+    // Send email to yourself (notification)
+    const notificationEmail = await resend.emails.send({
       from: "Portfolio Contact <onboarding@resend.dev>",
       to: ["japhetndri15@gmail.com"],
       subject: `Nouveau message de ${safeName}`,
@@ -207,9 +233,53 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("Email sent successfully:", emailResponse);
+    console.log("Notification email sent:", notificationEmail);
 
-    return new Response(JSON.stringify({ success: true, data: emailResponse }), {
+    // Send confirmation email to the sender
+    const confirmationEmail = await resend.emails.send({
+      from: "Japhet Calixte N'DRI <onboarding@resend.dev>",
+      to: [trimmedEmail],
+      subject: "Merci pour votre message !",
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h2 style="color: #333; border-bottom: 2px solid #6366f1; padding-bottom: 10px;">
+            Merci pour votre message, ${safeName} !
+          </h2>
+          
+          <p style="color: #555; line-height: 1.6;">
+            J'ai bien reçu votre message et je vous répondrai dans les plus brefs délais.
+          </p>
+          
+          <div style="background: #f4f4f5; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <p style="color: #666; margin: 0 0 10px 0;"><strong>Récapitulatif de votre message :</strong></p>
+            <p style="color: #333; margin: 0; white-space: pre-wrap;">${safeMessage}</p>
+          </div>
+          
+          <p style="color: #555; line-height: 1.6;">
+            En attendant, n'hésitez pas à consulter mes projets sur 
+            <a href="https://github.com/Jcalixte24" style="color: #6366f1;">GitHub</a> 
+            ou à me suivre sur 
+            <a href="https://www.linkedin.com/in/japhet-calixte-n'dri-0b73832a0" style="color: #6366f1;">LinkedIn</a>.
+          </p>
+          
+          <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 20px 0;">
+          
+          <p style="color: #888; font-size: 12px;">
+            Cet email a été envoyé automatiquement depuis mon portfolio. Si vous n'avez pas envoyé ce message, veuillez ignorer cet email.
+          </p>
+          
+          <p style="color: #333; margin-top: 20px;">
+            Cordialement,<br>
+            <strong>Japhet Calixte N'DRI</strong><br>
+            <span style="color: #666;">Data Scientist & Développeur Web</span>
+          </p>
+        </div>
+      `,
+    });
+
+    console.log("Confirmation email sent:", confirmationEmail);
+
+    return new Response(JSON.stringify({ success: true, data: { notification: notificationEmail, confirmation: confirmationEmail } }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
