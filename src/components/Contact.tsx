@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Phone, Github, Linkedin, Send } from "lucide-react";
+import { Mail, MapPin, Github, Linkedin, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
@@ -150,22 +150,6 @@ const Contact = () => {
                 </div>
               </Card>
 
-              <Card className="p-6 hover:shadow-card transition-smooth">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-primary/10">
-                    <Phone className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold mb-1">Téléphone</h3>
-                    <a 
-                      href="tel:+33745446404"
-                      className="text-muted-foreground hover:text-primary transition-smooth"
-                    >
-                      +33 7 45 44 64 04
-                    </a>
-                  </div>
-                </div>
-              </Card>
 
               <Card className="p-6 hover:shadow-card transition-smooth">
                 <div className="flex items-start gap-4">
