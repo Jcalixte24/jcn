@@ -1,143 +1,233 @@
 import { Button } from "@/components/ui/button";
-import { Github, Linkedin, Mail, Download, ChevronDown } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
+import { Github, Linkedin, Mail, ArrowDown, Sparkles } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { motion } from "framer-motion";
 import profileImg from "@/assets/japhet-profile-pro.jpg";
 
 const Hero = () => {
+  const { t } = useLanguage();
+
   return (
     <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Enhanced Background with multiple layers */}
+      {/* Animated Background */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src={heroBg} 
-          alt="" 
-          className="w-full h-full object-cover opacity-20"
+        {/* Gradient mesh */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+        
+        {/* Animated orbs */}
+        <motion.div 
+          className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+            x: [0, 50, 0],
+            y: [0, 30, 0],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
         />
-        {/* Animated gradient mesh */}
-        <div className="absolute inset-0 gradient-mesh animate-gradient-shift"></div>
-        {/* Multiple gradient overlays for depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background/90 to-accent/10"></div>
-        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-primary/5 to-accent/20 animate-pulse-glow"></div>
-        {/* Animated dots pattern */}
-        <div className="absolute inset-0 opacity-30" style={{
-          backgroundImage: 'radial-gradient(circle, hsl(var(--primary) / 0.3) 1px, transparent 1px)',
-          backgroundSize: '50px 50px',
-        }}></div>
+        <motion.div 
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent/20 rounded-full blur-3xl"
+          animate={{ 
+            scale: [1.2, 1, 1.2],
+            opacity: [0.3, 0.5, 0.3],
+            x: [0, -30, 0],
+            y: [0, -50, 0],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
+        />
+        
+        {/* Grid pattern */}
+        <div 
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(hsl(var(--primary)) 1px, transparent 1px),
+                             linear-gradient(90deg, hsl(var(--primary)) 1px, transparent 1px)`,
+            backgroundSize: '60px 60px',
+          }}
+        />
       </div>
 
       {/* Content */}
       <div className="container relative z-10 mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left: Text Content */}
-            <div className="space-y-6 animate-fade-in">
-              <div className="space-y-2">
-                <p className="text-primary font-semibold text-lg animate-fade-in flex items-center gap-2">
-                  <span className="inline-block w-2 h-2 bg-primary rounded-full animate-pulse-glow"></span>
-                  Bonjour, je suis
-                </p>
-                <h1 className="text-5xl md:text-7xl font-bold leading-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary animate-gradient-shift">
-                  Japhet Calixte N'DRI
-                </h1>
-                <h2 className="text-2xl md:text-4xl font-semibold bg-clip-text text-transparent bg-gradient-to-r from-muted-foreground to-primary">
-                  Junior Data Analyst
-                </h2>
+            <motion.div 
+              className="space-y-8"
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            >
+              <div className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20"
+                >
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-medium text-primary">{t('hero.greeting')}</span>
+                </motion.div>
+                
+                <motion.h1 
+                  className="text-5xl md:text-7xl font-bold leading-tight"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <span className="block text-foreground">Japhet Calixte</span>
+                  <span className="block bg-clip-text text-transparent bg-gradient-to-r from-primary via-accent to-primary animate-gradient bg-[length:200%_auto]">
+                    N'DRI
+                  </span>
+                </motion.h1>
+                
+                <motion.h2 
+                  className="text-2xl md:text-3xl font-semibold text-muted-foreground"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  {t('hero.title')}
+                </motion.h2>
               </div>
               
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Passionné par l'intelligence artificielle et la data science, 
-                étudiant en 2ème année au Programme Grande École de l'IA Institut Paris by EPITA. 
-                Mon ambition : devenir un expert reconnu internationalement et contribuer à la 
-                transformation numérique de la Côte d'Ivoire et de l'ensemble du continent africain.
-              </p>
+              <motion.p 
+                className="text-lg text-muted-foreground leading-relaxed max-w-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+              >
+                {t('hero.bio')}
+              </motion.p>
 
-              <div className="flex flex-wrap gap-4 pt-4">
-                <Button size="lg" className="gap-2 shadow-glow-strong animate-pulse-glow group relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-accent to-primary opacity-0 group-hover:opacity-100 transition-smooth"></div>
-                  <a href="#contact" className="flex items-center gap-2 relative z-10">
-                    Me Contacter
-                    <Mail className="w-4 h-4 group-hover:rotate-12 transition-smooth" />
+              <motion.div 
+                className="flex flex-wrap gap-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.6 }}
+              >
+                <Button 
+                  size="lg" 
+                  className="gap-2 shadow-glow group relative overflow-hidden"
+                  asChild
+                >
+                  <a href="#contact">
+                    <span className="relative z-10 flex items-center gap-2">
+                      {t('hero.contact')}
+                      <Mail className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                    </span>
                   </a>
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline" 
-                  className="gap-2 hover-lift group border-2 border-primary/30 hover:border-primary"
+                  className="gap-2 group border-2"
                   asChild
                 >
-                  <a href="https://cv-jcn.lovable.app/" target="_blank" rel="noopener noreferrer">
-                    <Download className="w-4 h-4 group-hover:translate-y-1 transition-smooth" />
-                    Télécharger CV
+                  <a href="/cv">
+                    {t('hero.cv')}
+                    <ArrowDown className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
                   </a>
                 </Button>
-              </div>
+              </motion.div>
 
-              <div className="flex gap-4 pt-6">
-                <a 
-                  href="https://github.com/Jcalixte24" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group p-3 rounded-full border-2 border-border hover:border-primary bg-background/50 backdrop-blur-sm hover:bg-primary/10 transition-smooth hover:scale-110 hover:shadow-glow"
-                >
-                  <Github className="w-5 h-5 group-hover:rotate-12 transition-smooth" />
-                </a>
-                <a 
-                  href="https://www.linkedin.com/in/japhet-calixte-n'dri-0b73832a0" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="group p-3 rounded-full border-2 border-border hover:border-primary bg-background/50 backdrop-blur-sm hover:bg-primary/10 transition-smooth hover:scale-110 hover:shadow-glow"
-                >
-                  <Linkedin className="w-5 h-5 group-hover:rotate-12 transition-smooth" />
-                </a>
-                <a 
-                  href="mailto:japhetndri15@gmail.com"
-                  className="group p-3 rounded-full border-2 border-border hover:border-primary bg-background/50 backdrop-blur-sm hover:bg-primary/10 transition-smooth hover:scale-110 hover:shadow-glow"
-                >
-                  <Mail className="w-5 h-5 group-hover:rotate-12 transition-smooth" />
-                </a>
-              </div>
-            </div>
+              <motion.div 
+                className="flex gap-4 pt-4"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7 }}
+              >
+                {[
+                  { href: "https://github.com/Jcalixte24", icon: Github, label: "GitHub" },
+                  { href: "https://www.linkedin.com/in/japhet-calixte-n'dri-0b73832a0", icon: Linkedin, label: "LinkedIn" },
+                  { href: "mailto:japhetndri15@gmail.com", icon: Mail, label: "Email" },
+                ].map((social, index) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    target={social.href.startsWith('http') ? "_blank" : undefined}
+                    rel={social.href.startsWith('http') ? "noopener noreferrer" : undefined}
+                    className="group p-3 rounded-xl border-2 border-border hover:border-primary bg-background/50 backdrop-blur-sm hover:bg-primary/10 transition-all duration-300 hover:scale-110"
+                    whileHover={{ y: -5 }}
+                    initial={{ opacity: 0, scale: 0 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.8 + index * 0.1 }}
+                  >
+                    <social.icon className="w-5 h-5 group-hover:text-primary transition-colors" />
+                  </motion.a>
+                ))}
+              </motion.div>
+            </motion.div>
 
-              <div className="flex justify-center animate-slide-in-right">
-              <div className="relative group animate-float">
+            {/* Right: Profile Image */}
+            <motion.div 
+              className="flex justify-center lg:justify-end"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.3 }}
+            >
+              <div className="relative">
                 {/* Glow effects */}
-                <div className="absolute inset-0 bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur-3xl opacity-40 group-hover:opacity-60 transition-smooth animate-pulse-glow"></div>
-                <div className="absolute -inset-6 bg-gradient-to-br from-primary/30 via-accent/30 to-primary/30 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-smooth animate-gradient-shift"></div>
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-tr from-primary via-accent to-primary rounded-full blur-3xl opacity-40"
+                  animate={{ 
+                    scale: [1, 1.1, 1],
+                    opacity: [0.3, 0.5, 0.3],
+                  }}
+                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                />
                 
                 {/* Rotating ring */}
-                <div className="absolute inset-0 rounded-full border-2 border-dashed border-primary/30 animate-[spin_20s_linear_infinite]"></div>
+                <motion.div 
+                  className="absolute -inset-4 rounded-full border-2 border-dashed border-primary/30"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                />
                 
-                {/* Main image container */}
+                {/* Main image */}
                 <div className="relative">
-                  <img 
+                  <motion.img 
                     src={profileImg} 
                     alt="Japhet Calixte N'DRI" 
-                    className="relative w-80 h-80 rounded-full object-cover border-4 border-primary/30 shadow-glow-strong group-hover:border-accent/50 group-hover:scale-[1.05] transition-bounce"
+                    className="w-72 h-72 md:w-96 md:h-96 rounded-full object-cover border-4 border-primary/30 shadow-2xl"
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
                   />
-                  {/* Shimmer overlay */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-transparent via-white/10 to-transparent animate-shimmer"></div>
                   
-                  {/* Badge JCN */}
-                  <div className="absolute -bottom-2 -right-2 bg-gradient-to-br from-primary to-accent p-4 rounded-2xl shadow-glow-strong border-4 border-background animate-float">
-                    <span className="text-2xl font-bold text-background">JCN</span>
-                  </div>
+                  {/* Badge */}
+                  <motion.div 
+                    className="absolute -bottom-2 -right-2 bg-gradient-to-br from-primary to-accent p-4 rounded-2xl shadow-xl border-4 border-background"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 1, type: "spring", stiffness: 200 }}
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                  >
+                    <span className="text-2xl font-bold text-primary-foreground">JCN</span>
+                  </motion.div>
                 </div>
               </div>
-            </div>
+            </motion.div>
           </div>
         </div>
       </div>
 
-      {/* Scroll Indicator with enhanced animation */}
-      <a 
+      {/* Scroll Indicator */}
+      <motion.a 
         href="#about"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 animate-bounce group"
+        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.2 }}
       >
-        <div className="relative">
-          <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/40 transition-smooth"></div>
-          <ChevronDown className="relative w-8 h-8 text-primary group-hover:text-accent transition-smooth" />
-        </div>
-      </a>
+        <motion.div 
+          className="flex flex-col items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+          animate={{ y: [0, 10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <span className="text-xs font-medium tracking-wider uppercase">{t('hero.scroll')}</span>
+          <ArrowDown className="w-5 h-5" />
+        </motion.div>
+      </motion.a>
     </section>
   );
 };
