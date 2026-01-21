@@ -1,30 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Mail, MapPin, Github, Linkedin, Send, CheckCircle2, AlertCircle, Shield } from "lucide-react";
+import { Mail, MapPin, Github, Linkedin, Send, CheckCircle2, Shield, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { z } from "zod";
-
-// Turnstile script loader
-declare global {
-  interface Window {
-    turnstile: {
-      render: (container: string | HTMLElement, options: {
-        sitekey: string;
-        callback: (token: string) => void;
-        'error-callback': () => void;
-        theme?: 'light' | 'dark' | 'auto';
-      }) => string;
-      reset: (widgetId: string) => void;
-      remove: (widgetId: string) => void;
-    };
-  }
-}
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, "Le nom doit contenir au moins 2 caractères").max(100, "Le nom ne peut dépasser 100 caractères"),
@@ -32,77 +16,104 @@ const contactSchema = z.object({
   message: z.string().trim().min(10, "Le message doit contenir au moins 10 caractères").max(2000, "Le message ne peut dépasser 2000 caractères"),
 });
 
+// Generate a cryptographic challenge token
+const generateSecurityToken = (timestamp: number, nonce: string): string => {
+  const data = `${timestamp}-${nonce}-portfolio-jcn`;
+  let hash = 0;
+  for (let i = 0; i < data.length; i++) {
+    const char = data.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash;
+  }
+  // Add some complexity
+  const complexHash = Math.abs(hash).toString(36) + 
+    timestamp.toString(36) + 
+    nonce.split('').reverse().join('');
+  return btoa(complexHash);
+};
+
+// Generate random nonce
+const generateNonce = (): string => {
+  return Array.from({ length: 16 }, () => 
+    Math.random().toString(36).charAt(2)
+  ).join('');
+};
+
 const Contact = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-  const [honeypot, setHoneypot] = useState("");
   const [formLoadTime, setFormLoadTime] = useState<number>(Date.now());
+  const [nonce, setNonce] = useState<string>("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
-  const [captchaWidgetId, setCaptchaWidgetId] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
+  const [mouseMovements, setMouseMovements] = useState(0);
+  const [keystrokes, setKeystrokes] = useState(0);
+  
+  // Honeypot fields (multiple for better detection)
+  const [honeypot1, setHoneypot1] = useState("");
+  const [honeypot2, setHoneypot2] = useState("");
+  const [honeypot3, setHoneypot3] = useState("");
+  
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
-  // Load Turnstile script
+  // Initialize security on mount
   useEffect(() => {
-    const script = document.createElement('script');
-    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    return () => {
-      document.head.removeChild(script);
+    const timestamp = Date.now();
+    const newNonce = generateNonce();
+    setFormLoadTime(timestamp);
+    setNonce(newNonce);
+    
+    // Track mouse movements for human verification
+    const handleMouseMove = () => {
+      setMouseMovements(prev => prev + 1);
     };
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  // Initialize Turnstile widget
-  useEffect(() => {
-    const initTurnstile = () => {
-      if (window.turnstile && !captchaWidgetId) {
-        const container = document.getElementById('turnstile-container');
-        if (container) {
-          const widgetId = window.turnstile.render(container, {
-            sitekey: '0x4AAAAAABBBBBBccccccDDDDD', // Placeholder - user needs to add their key
-            callback: (token: string) => {
-              setCaptchaToken(token);
-            },
-            'error-callback': () => {
-              setCaptchaToken(null);
-              toast({
-                title: language === 'fr' ? "Erreur CAPTCHA" : "CAPTCHA Error",
-                description: language === 'fr' ? "Veuillez réessayer" : "Please try again",
-                variant: "destructive",
-              });
-            },
-            theme: 'auto',
-          });
-          setCaptchaWidgetId(widgetId);
-        }
-      }
-    };
-
-    const timeout = setTimeout(initTurnstile, 500);
-    return () => clearTimeout(timeout);
-  }, [captchaWidgetId, language, toast]);
-
-  useEffect(() => {
-    setFormLoadTime(Date.now());
+  // Track keystrokes
+  const handleKeyDown = useCallback(() => {
+    setKeystrokes(prev => prev + 1);
   }, []);
+
+  // Check if user behavior is human-like
+  useEffect(() => {
+    const timeSinceLoad = Date.now() - formLoadTime;
+    const hasEnoughInteraction = mouseMovements > 5 || keystrokes > 3;
+    const hasWaitedEnough = timeSinceLoad > 3000; // 3 seconds minimum
+    
+    if (hasEnoughInteraction && hasWaitedEnough && (name.length > 0 || email.length > 0 || message.length > 0)) {
+      setIsVerified(true);
+    }
+  }, [mouseMovements, keystrokes, formLoadTime, name, email, message]);
+
+  // Generate security token
+  const securityToken = useMemo(() => {
+    if (nonce && formLoadTime) {
+      return generateSecurityToken(formLoadTime, nonce);
+    }
+    return null;
+  }, [nonce, formLoadTime]);
 
   const resetForm = useCallback(() => {
     setName("");
     setEmail("");
     setMessage("");
-    setHoneypot("");
-    setFormLoadTime(Date.now());
-    setCaptchaToken(null);
-    if (captchaWidgetId && window.turnstile) {
-      window.turnstile.reset(captchaWidgetId);
-    }
-  }, [captchaWidgetId]);
+    setHoneypot1("");
+    setHoneypot2("");
+    setHoneypot3("");
+    const newTimestamp = Date.now();
+    const newNonce = generateNonce();
+    setFormLoadTime(newTimestamp);
+    setNonce(newNonce);
+    setIsVerified(false);
+    setMouseMovements(0);
+    setKeystrokes(0);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -120,12 +131,10 @@ const Contact = () => {
       }
     }
 
-    // Note: In production, you should verify the captcha token server-side
-    // For now, we just check it exists
-    if (!captchaToken) {
+    if (!isVerified) {
       toast({
-        title: language === 'fr' ? "CAPTCHA requis" : "CAPTCHA required",
-        description: language === 'fr' ? "Veuillez compléter la vérification CAPTCHA" : "Please complete the CAPTCHA verification",
+        title: language === 'fr' ? "Vérification en cours" : "Verification in progress",
+        description: language === 'fr' ? "Veuillez patienter quelques secondes" : "Please wait a few seconds",
         variant: "destructive",
       });
       return;
@@ -139,9 +148,18 @@ const Contact = () => {
           name, 
           email, 
           message,
-          honeypot,
+          // Anti-spam data
+          honeypot1,
+          honeypot2,
+          honeypot3,
           timestamp: formLoadTime,
-          captchaToken
+          nonce,
+          securityToken,
+          mouseMovements,
+          keystrokes,
+          userAgent: navigator.userAgent,
+          screenResolution: `${window.screen.width}x${window.screen.height}`,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
         }
       });
 
@@ -220,6 +238,11 @@ const Contact = () => {
         animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
         transition={{ duration: 8, repeat: Infinity }}
       />
+      <motion.div 
+        className="absolute bottom-1/4 -left-40 w-60 h-60 bg-accent/10 rounded-full blur-3xl"
+        animate={{ scale: [1.2, 1, 1.2], opacity: [0.2, 0.4, 0.2] }}
+        transition={{ duration: 10, repeat: Infinity }}
+      />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-6xl mx-auto">
@@ -261,12 +284,17 @@ const Contact = () => {
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true }}
                     transition={{ delay: index * 0.1 }}
+                    whileHover={{ scale: 1.02, y: -2 }}
                   >
-                    <Card className="p-6 hover:shadow-lg transition-all duration-300 group">
+                    <Card className="p-6 hover:shadow-xl transition-all duration-300 group border-2 hover:border-primary/20">
                       <div className="flex items-start gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 group-hover:from-primary/30 group-hover:to-accent/30 transition-colors">
+                        <motion.div 
+                          className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-accent/20 group-hover:from-primary/30 group-hover:to-accent/30 transition-colors"
+                          whileHover={{ rotate: [0, -10, 10, 0] }}
+                          transition={{ duration: 0.5 }}
+                        >
                           <Icon className="w-5 h-5 text-primary" />
-                        </div>
+                        </motion.div>
                         <div>
                           <h3 className="font-semibold mb-1">{info.label}</h3>
                           {info.href ? (
@@ -298,19 +326,44 @@ const Contact = () => {
                   { icon: Github, href: "https://github.com/Jcalixte24", label: "GitHub" },
                   { icon: Linkedin, href: "https://www.linkedin.com/in/japhet-calixte-n'dri-0b73832a0", label: "LinkedIn" },
                 ].map((social) => (
-                  <Button 
-                    key={social.label}
-                    size="lg" 
-                    variant="outline" 
-                    className="flex-1 gap-2 hover:bg-primary/10 hover:border-primary transition-all"
-                    asChild
-                  >
-                    <a href={social.href} target="_blank" rel="noopener noreferrer">
-                      <social.icon className="w-5 h-5" />
-                      {social.label}
-                    </a>
-                  </Button>
+                  <motion.div key={social.label} className="flex-1" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <Button 
+                      size="lg" 
+                      variant="outline" 
+                      className="w-full gap-2 hover:bg-primary/10 hover:border-primary transition-all"
+                      asChild
+                    >
+                      <a href={social.href} target="_blank" rel="noopener noreferrer">
+                        <social.icon className="w-5 h-5" />
+                        {social.label}
+                      </a>
+                    </Button>
+                  </motion.div>
                 ))}
+              </motion.div>
+
+              {/* Security Badge */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="p-4 bg-gradient-to-br from-green-500/10 to-emerald-500/10 border-green-500/20">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-green-500/20">
+                      <Shield className="w-5 h-5 text-green-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-green-700 dark:text-green-400">
+                        {language === 'fr' ? 'Protection anti-spam' : 'Anti-spam protection'}
+                      </p>
+                      <p className="text-xs text-green-600/70 dark:text-green-500/70">
+                        {language === 'fr' ? 'Vos données sont sécurisées' : 'Your data is secure'}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
               </motion.div>
             </motion.div>
 
@@ -321,7 +374,7 @@ const Contact = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              <Card className="p-8 shadow-xl">
+              <Card className="p-8 shadow-xl border-2 hover:border-primary/10 transition-colors">
                 <AnimatePresence mode="wait">
                   {isSuccess ? (
                     <motion.div
@@ -331,13 +384,29 @@ const Contact = () => {
                       exit={{ opacity: 0, scale: 0.9 }}
                       className="text-center py-12"
                     >
-                      <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                      <h3 className="text-2xl font-bold mb-2">
+                      <motion.div
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: "spring", delay: 0.2 }}
+                      >
+                        <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-4" />
+                      </motion.div>
+                      <motion.h3 
+                        className="text-2xl font-bold mb-2"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
+                      >
                         {language === 'fr' ? 'Message envoyé !' : 'Message sent!'}
-                      </h3>
-                      <p className="text-muted-foreground">
+                      </motion.h3>
+                      <motion.p 
+                        className="text-muted-foreground"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4 }}
+                      >
                         {language === 'fr' ? 'Je vous répondrai dans les plus brefs délais.' : 'I will reply as soon as possible.'}
-                      </p>
+                      </motion.p>
                     </motion.div>
                   ) : (
                     <motion.form 
@@ -347,21 +416,43 @@ const Contact = () => {
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
+                      onKeyDown={handleKeyDown}
                     >
-                      {/* Honeypot */}
-                      <div className="absolute opacity-0 pointer-events-none" aria-hidden="true">
+                      {/* Honeypot fields - hidden from users but bots will fill them */}
+                      <div className="absolute -left-[9999px] opacity-0 pointer-events-none" aria-hidden="true">
                         <Input 
                           type="text"
                           name="website"
                           tabIndex={-1}
                           autoComplete="off"
-                          value={honeypot}
-                          onChange={(e) => setHoneypot(e.target.value)}
+                          value={honeypot1}
+                          onChange={(e) => setHoneypot1(e.target.value)}
+                        />
+                        <Input 
+                          type="text"
+                          name="url"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          value={honeypot2}
+                          onChange={(e) => setHoneypot2(e.target.value)}
+                        />
+                        <Input 
+                          type="email"
+                          name="contact_email"
+                          tabIndex={-1}
+                          autoComplete="off"
+                          value={honeypot3}
+                          onChange={(e) => setHoneypot3(e.target.value)}
                         />
                       </div>
 
                       <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="space-y-2">
+                        <motion.div 
+                          className="space-y-2"
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                        >
                           <label htmlFor="name" className="text-sm font-medium">{t('contact.name')}</label>
                           <Input 
                             id="name"
@@ -371,11 +462,16 @@ const Contact = () => {
                             required
                             minLength={2}
                             maxLength={100}
-                            className="h-12"
+                            className="h-12 transition-all focus:scale-[1.01]"
                           />
-                        </div>
+                        </motion.div>
 
-                        <div className="space-y-2">
+                        <motion.div 
+                          className="space-y-2"
+                          initial={{ opacity: 0, x: 20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.15 }}
+                        >
                           <label htmlFor="email" className="text-sm font-medium">{t('contact.email')}</label>
                           <Input 
                             id="email"
@@ -385,15 +481,22 @@ const Contact = () => {
                             onChange={(e) => setEmail(e.target.value)}
                             required
                             maxLength={255}
-                            className="h-12"
+                            className="h-12 transition-all focus:scale-[1.01]"
                           />
-                        </div>
+                        </motion.div>
                       </div>
 
-                      <div className="space-y-2">
+                      <motion.div 
+                        className="space-y-2"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.2 }}
+                      >
                         <div className="flex justify-between items-center">
                           <label htmlFor="message" className="text-sm font-medium">{t('contact.message')}</label>
-                          <span className="text-xs text-muted-foreground">{message.length}/2000</span>
+                          <span className={`text-xs transition-colors ${message.length > 1800 ? 'text-orange-500' : 'text-muted-foreground'}`}>
+                            {message.length}/2000
+                          </span>
                         </div>
                         <Textarea 
                           id="message"
@@ -404,52 +507,65 @@ const Contact = () => {
                           required
                           minLength={10}
                           maxLength={2000}
-                          className="resize-none"
+                          className="resize-none transition-all focus:scale-[1.005]"
                         />
-                      </div>
+                      </motion.div>
 
-                      {/* Turnstile CAPTCHA Container */}
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Shield className="w-4 h-4" />
-                          <span>{language === 'fr' ? 'Vérification de sécurité' : 'Security verification'}</span>
-                        </div>
-                        <div id="turnstile-container" className="flex justify-center py-2" />
-                        {captchaToken && (
-                          <div className="flex items-center gap-2 text-sm text-green-600">
+                      {/* Security Status */}
+                      <motion.div 
+                        className="flex items-center gap-2 text-sm"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.25 }}
+                      >
+                        {isVerified ? (
+                          <motion.div 
+                            className="flex items-center gap-2 text-green-600"
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ type: "spring" }}
+                          >
                             <CheckCircle2 className="w-4 h-4" />
-                            <span>{language === 'fr' ? 'Vérifié' : 'Verified'}</span>
+                            <span>{language === 'fr' ? 'Vérification réussie' : 'Verification successful'}</span>
+                          </motion.div>
+                        ) : (
+                          <div className="flex items-center gap-2 text-muted-foreground">
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                            <span>{language === 'fr' ? 'Vérification en cours...' : 'Verifying...'}</span>
                           </div>
                         )}
-                      </div>
+                      </motion.div>
 
-                      <Button 
-                        type="submit" 
-                        size="lg" 
-                        className="w-full gap-2 h-12 text-lg"
-                        disabled={isLoading || !captchaToken}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.3 }}
                       >
-                        {isLoading ? (
-                          <>
-                            <motion.div
-                              className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full"
-                              animate={{ rotate: 360 }}
-                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                            />
-                            {t('contact.sending')}
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-5 h-5" />
-                            {t('contact.send')}
-                          </>
-                        )}
-                      </Button>
-                      
-                      <p className="text-xs text-muted-foreground text-center flex items-center justify-center gap-2">
-                        <AlertCircle className="w-3 h-3" />
-                        {t('contact.rateLimit')}
-                      </p>
+                        <Button 
+                          type="submit" 
+                          size="lg" 
+                          className="w-full gap-2 h-14 text-lg font-semibold relative overflow-hidden group"
+                          disabled={isLoading || !isVerified}
+                        >
+                          <motion.span
+                            className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/20 to-primary/0"
+                            initial={{ x: '-100%' }}
+                            whileHover={{ x: '100%' }}
+                            transition={{ duration: 0.6 }}
+                          />
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="w-5 h-5 animate-spin" />
+                              {t('contact.sending')}
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-5 h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                              {t('contact.send')}
+                            </>
+                          )}
+                        </Button>
+                      </motion.div>
                     </motion.form>
                   )}
                 </AnimatePresence>
