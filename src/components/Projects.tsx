@@ -79,12 +79,12 @@ const projects: Project[] = [
   {
     title: "Cloud Kafka Project",
     description: {
-      fr: "Streaming de données en temps réel avec Apache Kafka. Architecture cloud-native pour le traitement de données massives et pipeline ETL.",
-      en: "Real-time data streaming with Apache Kafka. Cloud-native architecture for massive data processing and ETL pipeline."
+      fr: "Simulation d'un supermarché avec réseau FastAPI connecté à une base de données et streaming Kafka en temps réel pour la gestion des stocks et transactions.",
+      en: "Supermarket simulation with FastAPI network connected to a database and real-time Kafka streaming for inventory and transaction management."
     },
     icon: Cloud,
     gradient: "from-sky-500 to-blue-600",
-    tags: ["Kafka", "Cloud", "Data Streaming", "Python", "ETL"],
+    tags: ["FastAPI", "Kafka", "Database", "Python", "Simulation"],
     github: "https://github.com/Jcalixte24/projet-cloud-kafka",
     type: 'notebook'
   },
@@ -103,14 +103,14 @@ const projects: Project[] = [
     type: 'web'
   },
   {
-    title: "Flight Prediction ML",
+    title: "Flight Price Prediction",
     description: {
-      fr: "Modèle ML pour prédire les retards de vols. Feature engineering avancé, analyse de données historiques et optimisation de modèles.",
-      en: "ML model to predict flight delays. Advanced feature engineering, historical data analysis and model optimization."
+      fr: "Modèle ML pour prédire les prix des billets d'avion. Feature engineering avancé, analyse de données historiques et optimisation de modèles pour aider les voyageurs.",
+      en: "ML model to predict flight ticket prices. Advanced feature engineering, historical data analysis and model optimization to help travelers."
     },
     icon: Plane,
     gradient: "from-blue-500 to-indigo-600",
-    tags: ["Machine Learning", "Python", "Scikit-learn", "Prediction"],
+    tags: ["Machine Learning", "Python", "Scikit-learn", "Price Prediction"],
     github: "https://github.com/Jcalixte24/Flight-prediction",
     type: 'notebook'
   },
