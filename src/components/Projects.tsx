@@ -133,6 +133,20 @@ const projects: Project[] = [
     type: 'app'
   },
   {
+    title: "Vision Studio",
+    description: {
+      fr: "Application IA innovante combinant Computer Vision et interfaces utilisateur modernes. Traitement d'images intelligent avec technologies de pointe.",
+      en: "Innovative AI application combining Computer Vision and modern user interfaces. Intelligent image processing with cutting-edge technologies."
+    },
+    previewUrl: "https://vision-studio5.lovable.app/",
+    icon: Eye,
+    gradient: "from-indigo-500 to-purple-600",
+    tags: ["AI", "Computer Vision", "React", "Vibe Coding"],
+    demo: "https://vision-studio5.lovable.app/",
+    featured: true,
+    type: 'app'
+  },
+  {
     title: "Portfolio Illman Touré",
     description: {
       fr: "Portfolio professionnel créé en vibe coding pour Illman Touré. Design moderne avec animations fluides et interface responsive.",
