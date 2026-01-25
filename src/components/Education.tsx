@@ -40,15 +40,46 @@ const Education = () => {
     }
   ];
 
-  const certifications = [
+  const googleCertifications = [
     {
-      title: "Google Data Analytics Professional Certificate",
-      organization: "Google (Coursera)",
-      count: 8,
-      year: "2025",
-      skills: ["Data Analytics", "Data Cleaning", "Visualization", "R Programming", "Tableau"],
-      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C",
-      gradient: "from-red-500 to-orange-500"
+      title: { fr: "Fondations : Les données, partout des données", en: "Foundations: Data, Data, Everywhere" },
+      icon: "📊",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Poser des questions pour prendre des décisions", en: "Ask Questions to Make Data-Driven Decisions" },
+      icon: "❓",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Préparer les données pour l'exploration", en: "Prepare Data for Exploration" },
+      icon: "🔍",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Traiter les données pour les nettoyer", en: "Process Data from Dirty to Clean" },
+      icon: "🧹",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Analyser les données pour répondre aux questions", en: "Analyze Data to Answer Questions" },
+      icon: "📈",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Partager les données par la visualisation", en: "Share Data Through the Art of Visualization" },
+      icon: "🎨",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Analyse de données avec R", en: "Data Analysis with R Programming" },
+      icon: "📉",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
+    },
+    {
+      title: { fr: "Projet final : Étude de cas", en: "Capstone: Complete a Case Study" },
+      icon: "🎓",
+      link: "https://www.coursera.org/account/accomplishments/verify/RDXBALWLY24C"
     }
   ];
 
@@ -167,51 +198,53 @@ const Education = () => {
             {t('education.certifications')}
           </motion.h3>
           
-          {/* Google Certification */}
-          <div className="grid md:grid-cols-1 gap-6 mb-10">
-            {certifications.map((cert, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, scale: 0.95 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <Card className="p-6 hover:shadow-xl transition-all duration-300 group border-0 shadow-lg">
-                  <div className="flex items-start gap-4 mb-4">
-                    <div className={`p-3 rounded-xl bg-gradient-to-br ${cert.gradient} shadow-lg group-hover:scale-110 transition-transform`}>
-                      <Award className="w-5 h-5 text-white" />
+          {/* Google Certifications Grid */}
+          <motion.div
+            className="mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+          >
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 shadow-lg">
+                <Award className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h4 className="font-bold text-lg">Google Data Analytics Professional Certificate</h4>
+                <p className="text-sm text-muted-foreground">Google (Coursera) • 2025</p>
+              </div>
+              <Badge variant="secondary" className="ml-auto">8 {language === 'fr' ? 'cours' : 'courses'}</Badge>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {googleCertifications.map((cert, index) => (
+                <motion.a
+                  key={index}
+                  href={cert.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.08 }}
+                  whileHover={{ scale: 1.05, y: -5 }}
+                >
+                  <Card className="p-4 h-full text-center hover:shadow-xl transition-all duration-300 border-0 shadow-md bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/30 dark:to-orange-950/30 group-hover:from-red-100 group-hover:to-orange-100 dark:group-hover:from-red-900/40 dark:group-hover:to-orange-900/40">
+                    <div className="text-3xl mb-3 group-hover:scale-110 transition-transform">
+                      {cert.icon}
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="font-bold">{cert.title}</h4>
-                        <Badge variant="secondary" className="text-xs">{cert.count}</Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{cert.organization} • {cert.year}</p>
+                    <p className="text-xs font-medium leading-tight text-muted-foreground group-hover:text-foreground transition-colors">
+                      {cert.title[language]}
+                    </p>
+                    <div className="mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <ExternalLink className="w-3 h-3 mx-auto text-primary" />
                     </div>
-                  </div>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {cert.skills.slice(0, 5).map((skill, i) => (
-                      <Badge key={i} variant="outline" className="text-xs">
-                        {skill}
-                      </Badge>
-                    ))}
-                  </div>
-                  
-                  <a 
-                    href={cert.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    {language === 'fr' ? 'Voir la certification' : 'View certification'}
-                  </a>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                  </Card>
+                </motion.a>
+              ))}
+            </div>
+          </motion.div>
 
           {/* Columbia+ Badges */}
           <motion.div
