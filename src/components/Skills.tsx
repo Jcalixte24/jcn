@@ -30,7 +30,7 @@ const Skills = () => {
       title: { fr: "Bases de Données", en: "Databases" },
       icon: Database,
       gradient: "from-orange-500 to-red-500",
-      skills: ["PostgreSQL", "MySQL", "MongoDB", "Supabase", "Data Engineering"]
+      skills: ["PostgreSQL", "MySQL", "Transact SQL", "Supabase", "Data Engineering"]
     },
     {
       title: { fr: "Outils DevOps", en: "DevOps Tools" },

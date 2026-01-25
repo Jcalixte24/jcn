@@ -1,4 +1,4 @@
-import { Github, Linkedin, Mail, Heart } from "lucide-react";
+import { Github, Linkedin, Mail } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -111,11 +111,6 @@ const Footer = () => {
             <p className="text-muted-foreground flex items-center justify-center gap-2 flex-wrap">
               <span>© {currentYear} Japhet Calixte N'DRI.</span>
               <span>{t('footer.rights')}</span>
-              <span className="hidden sm:inline">•</span>
-              <span className="flex items-center gap-1">
-                {t('footer.made')} <Heart className="w-4 h-4 text-red-500 fill-red-500" /> 
-                {language === 'fr' ? 'à Paris' : 'in Paris'}
-              </span>
             </p>
           </motion.div>
         </div>

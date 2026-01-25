@@ -1,7 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Github, ArrowRight, Code, BarChart, Globe, Cpu, Leaf, Cloud, Plane, Eye } from "lucide-react";
+import { ExternalLink, Github, ArrowRight, Code, BarChart, Globe, Cpu, Leaf, Cloud, Plane, Eye, Play } from "lucide-react";
+import cloudKafkaVideo from "@/assets/cloud-kafka-demo.mp4";
+import evaluateurDiPreview from "@/assets/evaluateur-di-preview.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
@@ -16,6 +18,7 @@ interface Project {
   github?: string;
   demo?: string;
   featured?: boolean;
+  hasVideo?: boolean;
   type: 'app' | 'notebook' | 'web';
 }
 
@@ -26,12 +29,12 @@ const projects: Project[] = [
       fr: "Planificateur de transport intelligent pour Abidjan avec itinéraires SOTRA, bus et taxis. Interface interactive avec GeoJSON et intégration API Maps pour navigation en temps réel.",
       en: "Smart transport planner for Abidjan with SOTRA, bus and taxi routes. Interactive interface with GeoJSON and Maps API integration for real-time navigation."
     },
-    previewUrl: "https://babitransports.netlify.app/",
+    previewUrl: "https://babitransport.netlify.app/",
     icon: Globe,
     gradient: "from-emerald-500 to-teal-600",
     tags: ["JavaScript", "React", "GeoJSON", "API Maps", "Transport"],
     github: "https://github.com/Jcalixte24/BabiTransport",
-    demo: "https://babitransports.netlify.app/",
+    demo: "https://babitransport.netlify.app/",
     featured: true,
     type: 'web'
   },
@@ -51,17 +54,19 @@ const projects: Project[] = [
     type: 'app'
   },
   {
-    title: "Spotify Analytics",
+    title: "MusicHits Analytics",
     description: {
-      fr: "Analyse approfondie des facteurs de popularité musicale via les données Spotify. Visualisations avec Python, Pandas et Seaborn pour identifier les tendances.",
-      en: "In-depth analysis of music popularity factors using Spotify data. Visualizations with Python, Pandas and Seaborn to identify trends."
+      fr: "Analyse approfondie des facteurs de popularité musicale via les données Spotify. Dashboard interactif avec visualisations Python, Pandas et Seaborn pour identifier les tendances.",
+      en: "In-depth analysis of music popularity factors using Spotify data. Interactive dashboard with Python, Pandas and Seaborn visualizations to identify trends."
     },
+    previewUrl: "https://lyeszs.github.io/MusicHits-Analytics/index.html",
     icon: BarChart,
     gradient: "from-green-500 to-emerald-600",
-    tags: ["Python", "Pandas", "Seaborn", "Data Viz", "Jupyter"],
+    tags: ["Python", "Pandas", "Seaborn", "Data Viz", "Dashboard"],
     github: "https://github.com/Jcalixte24/spotify-analytics",
+    demo: "https://lyeszs.github.io/MusicHits-Analytics/index.html",
     featured: true,
-    type: 'notebook'
+    type: 'web'
   },
   {
     title: "Sauver Gaia",
@@ -86,7 +91,8 @@ const projects: Project[] = [
     gradient: "from-sky-500 to-blue-600",
     tags: ["FastAPI", "Kafka", "Database", "Python", "Simulation"],
     github: "https://github.com/Jcalixte24/projet-cloud-kafka",
-    type: 'notebook'
+    hasVideo: true,
+    type: 'app'
   },
   {
     title: "Web Analytics Dashboard",
@@ -126,12 +132,30 @@ const projects: Project[] = [
     github: "https://github.com/Jcalixte24/objet-detection",
     type: 'app'
   },
+  {
+    title: "Portfolio Illman Touré",
+    description: {
+      fr: "Portfolio professionnel créé en vibe coding pour Illman Touré. Design moderne avec animations fluides et interface responsive.",
+      en: "Professional portfolio created with vibe coding for Illman Touré. Modern design with smooth animations and responsive interface."
+    },
+    previewUrl: "https://sir-heal.lovable.app/",
+    icon: Code,
+    gradient: "from-amber-500 to-orange-600",
+    tags: ["Vibe Coding", "React", "Tailwind CSS", "Portfolio"],
+    demo: "https://sir-heal.lovable.app/",
+    type: 'web'
+  },
 ];
 
 // Animated project card with iframe preview
 const ProjectCard = ({ project, index, isFeatured }: { project: Project; index: number; isFeatured: boolean }) => {
   const { language, t } = useLanguage();
   const Icon = project.icon;
+  
+  // Check if this is the Évaluateur D&I project to use static image
+  const isEvaluateurDI = project.title === "Évaluateur D&I";
+  // Check if this project has video
+  const hasVideo = project.hasVideo;
   
   return (
     <motion.div
@@ -148,7 +172,60 @@ const ProjectCard = ({ project, index, isFeatured }: { project: Project; index: 
       <Card className={`overflow-hidden border-0 shadow-lg hover:shadow-2xl transition-all duration-500 bg-card ${isFeatured ? 'h-full' : ''}`}>
         {/* Preview Section */}
         <div className={`relative ${isFeatured ? 'h-64' : 'h-48'} overflow-hidden bg-gradient-to-br ${project.gradient}`}>
-          {project.previewUrl ? (
+          {hasVideo ? (
+            <>
+              {/* Video preview for Cloud Kafka */}
+              <video
+                src={cloudKafkaVideo}
+                className="absolute inset-0 w-full h-full object-cover"
+                muted
+                loop
+                autoPlay
+                playsInline
+              />
+              {/* Overlay */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent opacity-40 group-hover:opacity-20 transition-opacity duration-500"
+              />
+              {/* Play indicator */}
+              <div className="absolute top-4 right-4 z-10">
+                <Badge className="backdrop-blur-md bg-white/90 text-foreground shadow-lg gap-1">
+                  <Play className="w-3 h-3 fill-current" />
+                  Vidéo
+                </Badge>
+              </div>
+            </>
+          ) : isEvaluateurDI ? (
+            <>
+              {/* Static image preview for Évaluateur D&I */}
+              <img
+                src={evaluateurDiPreview}
+                alt={project.title}
+                className="absolute inset-0 w-full h-full object-cover object-top"
+              />
+              {/* Overlay on hover */}
+              <motion.div 
+                className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent opacity-40 group-hover:opacity-20 transition-opacity duration-500"
+              />
+              
+              {/* Preview link overlay */}
+              <motion.div 
+                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                initial={false}
+              >
+                <Button 
+                  size="lg" 
+                  className="gap-2 shadow-xl"
+                  asChild
+                >
+                  <a href={project.demo} target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-5 h-5" />
+                    {t('projects.viewDemo')}
+                  </a>
+                </Button>
+              </motion.div>
+            </>
+          ) : project.previewUrl ? (
             <>
               {/* Iframe preview */}
               <iframe
