@@ -69,17 +69,18 @@ const projects: Project[] = [
     type: 'web'
   },
   {
-    title: "Sauver Gaia",
+    title: "Portfolio Illman Touré",
     description: {
-      fr: "Projet environnemental avec analyse de données pour sensibiliser à la protection de la planète. Impact social et visualisations engageantes.",
-      en: "Environmental project with data analysis to raise awareness about planet protection. Social impact and engaging visualizations."
+      fr: "Portfolio professionnel créé en vibe coding pour Illman Touré. Design moderne avec animations fluides et interface responsive.",
+      en: "Professional portfolio created with vibe coding for Illman Touré. Modern design with smooth animations and responsive interface."
     },
-    icon: Leaf,
-    gradient: "from-lime-500 to-green-600",
-    tags: ["Python", "Environment", "Data", "Social Impact"],
-    github: "https://github.com/Jcalixte24/sauver-gaia",
+    previewUrl: "https://sir-heal.lovable.app/",
+    icon: Code,
+    gradient: "from-amber-500 to-orange-600",
+    tags: ["Vibe Coding", "React", "Tailwind CSS", "Portfolio"],
+    demo: "https://sir-heal.lovable.app/",
     featured: true,
-    type: 'notebook'
+    type: 'web'
   },
   {
     title: "Cloud Kafka Project",
@@ -147,17 +148,16 @@ const projects: Project[] = [
     type: 'app'
   },
   {
-    title: "Portfolio Illman Touré",
+    title: "Sauver Gaia",
     description: {
-      fr: "Portfolio professionnel créé en vibe coding pour Illman Touré. Design moderne avec animations fluides et interface responsive.",
-      en: "Professional portfolio created with vibe coding for Illman Touré. Modern design with smooth animations and responsive interface."
+      fr: "Projet environnemental avec analyse de données pour sensibiliser à la protection de la planète. Impact social et visualisations engageantes.",
+      en: "Environmental project with data analysis to raise awareness about planet protection. Social impact and engaging visualizations."
     },
-    previewUrl: "https://sir-heal.lovable.app/",
-    icon: Code,
-    gradient: "from-amber-500 to-orange-600",
-    tags: ["Vibe Coding", "React", "Tailwind CSS", "Portfolio"],
-    demo: "https://sir-heal.lovable.app/",
-    type: 'web'
+    icon: Leaf,
+    gradient: "from-lime-500 to-green-600",
+    tags: ["Python", "Environment", "Data", "Social Impact"],
+    github: "https://github.com/Jcalixte24/sauver-gaia",
+    type: 'notebook'
   },
 ];
 
