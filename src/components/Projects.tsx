@@ -3,6 +3,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ExternalLink, Github, ArrowRight, Code, BarChart, Globe, Cpu, Leaf, Cloud, Plane, Eye, Play, Wifi } from "lucide-react";
 import cloudKafkaVideo from "@/assets/cloud-kafka-demo.mp4";
+import iotEsp32Video from "@/assets/iot-esp32-demo.mp4";
+import iotEsp32Preview from "@/assets/iot-esp32-preview.jpeg";
 import evaluateurDiPreview from "@/assets/evaluateur-di-preview.png";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, useScroll, useTransform } from "framer-motion";
@@ -19,6 +21,8 @@ interface Project {
   demo?: string;
   featured?: boolean;
   hasVideo?: boolean;
+  videoSrc?: 'kafka' | 'iot';
+  previewImage?: 'iot';
   type: 'app' | 'notebook' | 'web';
 }
 
@@ -93,6 +97,7 @@ const projects: Project[] = [
     tags: ["FastAPI", "Kafka", "Database", "Python", "Simulation"],
     github: "https://github.com/Jcalixte24/projet-cloud-kafka",
     hasVideo: true,
+    videoSrc: 'kafka',
     type: 'app'
   },
   {
@@ -157,6 +162,9 @@ const projects: Project[] = [
     gradient: "from-cyan-500 to-blue-600",
     tags: ["ESP32", "C++", "IoT", "HTML/JS", "Domotique"],
     github: "https://github.com/Jcalixte24",
+    hasVideo: true,
+    videoSrc: 'iot',
+    previewImage: 'iot',
     type: 'app'
   },
   {
@@ -200,14 +208,15 @@ const ProjectCard = ({ project, index, isFeatured }: { project: Project; index: 
         <div className={`relative ${isFeatured ? 'h-64' : 'h-48'} overflow-hidden bg-gradient-to-br ${project.gradient}`}>
           {hasVideo ? (
             <>
-              {/* Video preview for Cloud Kafka */}
+              {/* Video preview */}
               <video
-                src={cloudKafkaVideo}
+                src={project.videoSrc === 'iot' ? iotEsp32Video : cloudKafkaVideo}
                 className="absolute inset-0 w-full h-full object-cover"
                 muted
                 loop
                 autoPlay
                 playsInline
+                poster={project.previewImage === 'iot' ? iotEsp32Preview : undefined}
               />
               {/* Overlay */}
               <motion.div 
