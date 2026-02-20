@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Github, ArrowRight, Code, BarChart, Globe, Cpu, Leaf, Cloud, Plane, Eye, Play } from "lucide-react";
+import { ExternalLink, Github, ArrowRight, Code, BarChart, Globe, Cpu, Leaf, Cloud, Plane, Eye, Play, Wifi } from "lucide-react";
 import cloudKafkaVideo from "@/assets/cloud-kafka-demo.mp4";
 import evaluateurDiPreview from "@/assets/evaluateur-di-preview.png";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -145,6 +145,18 @@ const projects: Project[] = [
     tags: ["AI", "Computer Vision", "React", "Vibe Coding"],
     demo: "https://vision-studio5.lovable.app/",
     featured: true,
+    type: 'app'
+  },
+  {
+    title: "IoT Domotique ESP32",
+    description: {
+      fr: "Système domotique intelligent avec ESP32 : détection d'intrusion, éclairage automatisé et interface web temps réel pilotable via smartphone. Architecture multitâche avec capteurs PIR et ultrason.",
+      en: "Smart home automation system with ESP32: intrusion detection, automated lighting and real-time web interface controllable via smartphone. Multitask architecture with PIR and ultrasonic sensors."
+    },
+    icon: Wifi,
+    gradient: "from-cyan-500 to-blue-600",
+    tags: ["ESP32", "C++", "IoT", "HTML/JS", "Domotique"],
+    github: "https://github.com/Jcalixte24",
     type: 'app'
   },
   {
