@@ -4,15 +4,19 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Lock, Unlock, User, Briefcase, GraduationCap, Rocket, Cpu, Mail, Gamepad2, X } from "lucide-react";
 import profileImg from "@/assets/japhet-profile-pro.jpg";
 import SectionPanel from "./SectionPanel";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export interface ConstellationNode {
   id: string;
   label: { fr: string; en: string };
   icon: React.ElementType;
-  x: number; // percentage
-  y: number; // percentage
-  size: number; // planet size
-  color: string; // hsl
+  x: number;
+  y: number;
+  mx: number; // mobile x
+  my: number; // mobile y
+  size: number;
+  mobileSize: number;
+  color: string;
   glowColor: string;
   orbitRings?: number;
   connectedTo: string[];
@@ -23,8 +27,8 @@ const nodes: ConstellationNode[] = [
     id: "home",
     label: { fr: "Accueil", en: "Home" },
     icon: User,
-    x: 50, y: 45,
-    size: 70,
+    x: 50, y: 42, mx: 50, my: 18,
+    size: 70, mobileSize: 52,
     color: "hsl(195, 100%, 55%)",
     glowColor: "195, 100%, 55%",
     orbitRings: 2,
@@ -34,8 +38,8 @@ const nodes: ConstellationNode[] = [
     id: "about",
     label: { fr: "À Propos", en: "About" },
     icon: User,
-    x: 25, y: 25,
-    size: 50,
+    x: 25, y: 22, mx: 22, my: 32,
+    size: 50, mobileSize: 40,
     color: "hsl(260, 60%, 55%)",
     glowColor: "260, 60%, 55%",
     connectedTo: ["experience", "skills"],
@@ -44,8 +48,8 @@ const nodes: ConstellationNode[] = [
     id: "experience",
     label: { fr: "Expériences", en: "Experience" },
     icon: Briefcase,
-    x: 75, y: 20,
-    size: 50,
+    x: 75, y: 18, mx: 78, my: 32,
+    size: 50, mobileSize: 40,
     color: "hsl(150, 70%, 45%)",
     glowColor: "150, 70%, 45%",
     connectedTo: ["education"],
@@ -54,8 +58,8 @@ const nodes: ConstellationNode[] = [
     id: "education",
     label: { fr: "Formation", en: "Education" },
     icon: GraduationCap,
-    x: 80, y: 55,
-    size: 45,
+    x: 82, y: 50, mx: 80, my: 50,
+    size: 45, mobileSize: 38,
     color: "hsl(40, 95%, 55%)",
     glowColor: "40, 95%, 55%",
     connectedTo: ["projects"],
@@ -64,8 +68,8 @@ const nodes: ConstellationNode[] = [
     id: "projects",
     label: { fr: "Projets", en: "Projects" },
     icon: Rocket,
-    x: 65, y: 78,
-    size: 55,
+    x: 68, y: 76, mx: 65, my: 66,
+    size: 55, mobileSize: 42,
     color: "hsl(0, 80%, 55%)",
     glowColor: "0, 80%, 55%",
     connectedTo: ["hobbies"],
@@ -74,8 +78,8 @@ const nodes: ConstellationNode[] = [
     id: "skills",
     label: { fr: "Compétences", en: "Skills" },
     icon: Cpu,
-    x: 20, y: 60,
-    size: 48,
+    x: 18, y: 55, mx: 20, my: 50,
+    size: 48, mobileSize: 38,
     color: "hsl(280, 70%, 55%)",
     glowColor: "280, 70%, 55%",
     connectedTo: ["contact"],
@@ -84,8 +88,8 @@ const nodes: ConstellationNode[] = [
     id: "hobbies",
     label: { fr: "Passions", en: "Hobbies" },
     icon: Gamepad2,
-    x: 40, y: 80,
-    size: 40,
+    x: 38, y: 78, mx: 35, my: 66,
+    size: 40, mobileSize: 36,
     color: "hsl(320, 70%, 55%)",
     glowColor: "320, 70%, 55%",
     connectedTo: ["contact"],
@@ -94,19 +98,19 @@ const nodes: ConstellationNode[] = [
     id: "contact",
     label: { fr: "Contact", en: "Contact" },
     icon: Mail,
-    x: 15, y: 82,
-    size: 45,
+    x: 15, y: 80, mx: 20, my: 80,
+    size: 45, mobileSize: 38,
     color: "hsl(195, 90%, 50%)",
     glowColor: "195, 90%, 50%",
     connectedTo: [],
   },
 ];
 
-// Unlock order
 const unlockSequence = ["home", "about", "experience", "education", "projects", "skills", "hobbies", "contact"];
 
 const ConstellationMap = () => {
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
   const [unlockedNodes, setUnlockedNodes] = useState<Set<string>>(() => {
     const saved = localStorage.getItem("constellation-unlocked");
     return saved ? new Set(JSON.parse(saved)) : new Set(["home"]);
@@ -121,8 +125,6 @@ const ConstellationMap = () => {
   const handleNodeClick = useCallback((nodeId: string) => {
     if (!unlockedNodes.has(nodeId)) return;
     setActiveNode(nodeId);
-    
-    // Unlock next nodes
     const node = nodes.find(n => n.id === nodeId);
     if (node) {
       setUnlockedNodes(prev => {
@@ -137,13 +139,15 @@ const ConstellationMap = () => {
     setUnlockedNodes(new Set(unlockSequence));
   };
 
-  const getNextUnlockable = () => {
-    return unlockSequence.find(id => !unlockedNodes.has(id));
-  };
+  const getPos = (node: ConstellationNode) => ({
+    x: isMobile ? node.mx : node.x,
+    y: isMobile ? node.my : node.y,
+  });
+
+  const getSize = (node: ConstellationNode) => isMobile ? node.mobileSize : node.size;
 
   return (
     <div className="relative w-full h-screen overflow-hidden">
-      {/* Nebula background */}
       <div className="absolute inset-0 gradient-nebula opacity-60" />
 
       {/* SVG Connections */}
@@ -163,11 +167,13 @@ const ConstellationMap = () => {
             if (!target) return null;
             const isUnlocked = unlockedNodes.has(node.id) && unlockedNodes.has(targetId);
             const isNextPath = unlockedNodes.has(node.id) && !unlockedNodes.has(targetId);
+            const p1 = getPos(node);
+            const p2 = getPos(target);
             return (
               <motion.line
                 key={`${node.id}-${targetId}`}
-                x1={`${node.x}%`} y1={`${node.y}%`}
-                x2={`${target.x}%`} y2={`${target.y}%`}
+                x1={`${p1.x}%`} y1={`${p1.y}%`}
+                x2={`${p2.x}%`} y2={`${p2.y}%`}
                 stroke={isUnlocked ? `hsl(${node.glowColor})` : isNextPath ? "hsl(195, 100%, 55%)" : "hsl(230, 20%, 20%)"}
                 strokeWidth={isUnlocked ? 2 : 1}
                 strokeDasharray={isUnlocked ? "none" : "8 4"}
@@ -189,32 +195,34 @@ const ConstellationMap = () => {
         const isHome = node.id === "home";
         const isHovered = hoveredNode === node.id;
         const isNext = !isUnlocked && nodes.some(n => n.connectedTo.includes(node.id) && unlockedNodes.has(n.id));
+        const pos = getPos(node);
+        const sz = getSize(node);
 
         return (
           <motion.div
             key={node.id}
             className="absolute z-20"
             style={{
-              left: `${node.x}%`,
-              top: `${node.y}%`,
+              left: `${pos.x}%`,
+              top: `${pos.y}%`,
               transform: "translate(-50%, -50%)",
             }}
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: index * 0.15, type: "spring", stiffness: 100 }}
+            transition={{ delay: index * 0.12, type: "spring", stiffness: 100 }}
           >
             {/* Orbit rings for home */}
-            {isHome && (
+            {isHome && !isMobile && (
               <>
                 <motion.div
                   className="absolute rounded-full border border-primary/20"
-                  style={{ width: 160, height: 160, left: -45, top: -45 }}
+                  style={{ width: sz * 2.3, height: sz * 2.3, left: -(sz * 0.65), top: -(sz * 0.65) }}
                   animate={{ rotate: 360 }}
                   transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
                 />
                 <motion.div
                   className="absolute rounded-full border border-primary/10"
-                  style={{ width: 220, height: 220, left: -75, top: -75 }}
+                  style={{ width: sz * 3.2, height: sz * 3.2, left: -(sz * 1.1), top: -(sz * 1.1) }}
                   animate={{ rotate: -360 }}
                   transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
                 />
@@ -226,44 +234,38 @@ const ConstellationMap = () => {
               <motion.div
                 className="absolute rounded-full"
                 style={{
-                  width: node.size * 2,
-                  height: node.size * 2,
-                  left: -(node.size / 2),
-                  top: -(node.size / 2),
+                  width: sz * 2,
+                  height: sz * 2,
+                  left: -(sz / 2),
+                  top: -(sz / 2),
                   background: `radial-gradient(circle, hsl(${node.glowColor} / 0.3) 0%, transparent 70%)`,
                 }}
-                animate={{
-                  scale: [1, 1.3, 1],
-                  opacity: [0.5, 0.8, 0.5],
-                }}
+                animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
             )}
 
-            {/* Locked pulse for next unlockable */}
+            {/* Locked pulse */}
             {isNext && (
               <motion.div
                 className="absolute rounded-full border-2 border-primary/40"
                 style={{
-                  width: node.size + 20,
-                  height: node.size + 20,
-                  left: -10,
-                  top: -10,
+                  width: sz + 16,
+                  height: sz + 16,
+                  left: -8,
+                  top: -8,
                 }}
-                animate={{
-                  scale: [1, 1.5],
-                  opacity: [0.6, 0],
-                }}
+                animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
                 transition={{ duration: 2, repeat: Infinity }}
               />
             )}
 
             {/* Planet body */}
             <motion.button
-              className="relative rounded-full flex items-center justify-center cursor-pointer focus:outline-none group"
+              className="relative rounded-full flex items-center justify-center cursor-pointer focus:outline-none"
               style={{
-                width: node.size,
-                height: node.size,
+                width: sz,
+                height: sz,
                 background: isUnlocked
                   ? `radial-gradient(circle at 30% 30%, hsl(${node.glowColor} / 0.9), hsl(${node.glowColor} / 0.4))`
                   : "radial-gradient(circle at 30% 30%, hsl(230, 20%, 20%), hsl(230, 25%, 10%))",
@@ -276,7 +278,7 @@ const ConstellationMap = () => {
               onMouseLeave={() => setHoveredNode(null)}
               whileHover={isUnlocked ? { scale: 1.15 } : { scale: 1.05 }}
               whileTap={isUnlocked ? { scale: 0.95 } : undefined}
-              animate={isHome ? { y: [0, -8, 0] } : undefined}
+              animate={isHome ? { y: [0, -6, 0] } : undefined}
               transition={isHome ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : undefined}
               disabled={!isUnlocked}
             >
@@ -287,22 +289,22 @@ const ConstellationMap = () => {
                   className="w-full h-full rounded-full object-cover border-2 border-primary/50"
                 />
               ) : isUnlocked ? (
-                <Icon className="w-1/3 h-1/3 text-foreground drop-shadow-lg" />
+                <Icon style={{ width: sz * 0.35, height: sz * 0.35 }} className="text-foreground drop-shadow-lg" />
               ) : (
-                <Lock className="w-1/3 h-1/3 text-muted-foreground/50" />
+                <Lock style={{ width: sz * 0.3, height: sz * 0.3 }} className="text-muted-foreground/50" />
               )}
             </motion.button>
 
             {/* Label */}
             <motion.div
               className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-center"
-              style={{ top: node.size + 8 }}
+              style={{ top: sz + 6 }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.15 + 0.5 }}
+              transition={{ delay: index * 0.12 + 0.5 }}
             >
               <span
-                className={`text-xs font-orbitron font-medium tracking-wider uppercase ${
+                className={`text-[10px] md:text-xs font-orbitron font-medium tracking-wider uppercase ${
                   isUnlocked ? "text-foreground" : "text-muted-foreground/40"
                 }`}
               >
@@ -310,11 +312,11 @@ const ConstellationMap = () => {
               </span>
               {!isUnlocked && isNext && (
                 <motion.span
-                  className="block text-[10px] text-primary/60 mt-0.5"
+                  className="block text-[8px] md:text-[10px] text-primary/60 mt-0.5"
                   animate={{ opacity: [0.4, 1, 0.4] }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
-                  {language === "fr" ? "Cliquez pour débloquer" : "Click to unlock"}
+                  {language === "fr" ? "Débloquer" : "Unlock"}
                 </motion.span>
               )}
             </motion.div>
@@ -322,45 +324,42 @@ const ConstellationMap = () => {
         );
       })}
 
-      {/* Top bar with name + controls */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-4 md:p-6 flex items-start justify-between">
+      {/* Top bar */}
+      <div className="absolute top-0 left-0 right-0 z-30 p-3 md:p-6 flex items-start justify-between">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h1 className="text-xl md:text-2xl font-orbitron font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-            Japhet Calixte N'DRI
+          <h1 className="text-base md:text-2xl font-orbitron font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+            JCN
+            <span className="hidden md:inline"> — Japhet Calixte N'DRI</span>
           </h1>
-          <p className="text-xs md:text-sm text-muted-foreground font-exo">
-            {language === "fr" ? "Junior Data Analyst • Explorez mon univers" : "Junior Data Analyst • Explore my universe"}
+          <p className="text-[10px] md:text-sm text-muted-foreground font-exo">
+            {language === "fr" ? "Explorez mon univers" : "Explore my universe"}
           </p>
         </motion.div>
 
         <motion.div
-          className="flex items-center gap-3"
+          className="flex items-center gap-2"
           initial={{ opacity: 0, x: 30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 }}
         >
-          {/* Progress */}
-          <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-xs font-exo">
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full glass-card text-[10px] md:text-xs font-exo">
             <span className="text-primary font-semibold">{unlockedNodes.size}</span>
             <span className="text-muted-foreground">/ {nodes.length}</span>
-            <span className="text-muted-foreground">
-              {language === "fr" ? "débloqué" : "unlocked"}
-            </span>
           </div>
 
           {unlockedNodes.size < nodes.length && (
             <motion.button
               onClick={handleUnlockAll}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-full glass-card text-xs font-exo text-muted-foreground hover:text-primary transition-colors"
+              className="flex items-center gap-1.5 px-2 py-1 rounded-full glass-card text-[10px] md:text-xs font-exo text-muted-foreground hover:text-primary transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               <Unlock className="w-3 h-3" />
-              {language === "fr" ? "Tout débloquer" : "Unlock all"}
+              <span className="hidden sm:inline">{language === "fr" ? "Tout débloquer" : "Unlock all"}</span>
             </motion.button>
           )}
         </motion.div>
@@ -370,26 +369,26 @@ const ConstellationMap = () => {
       <AnimatePresence>
         {!activeNode && (
           <motion.div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30"
+            className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ delay: 1.5 }}
           >
             <motion.p
-              className="text-sm text-muted-foreground font-exo text-center px-6 py-3 rounded-full glass-card"
+              className="text-xs md:text-sm text-muted-foreground font-exo text-center px-4 py-2 md:px-6 md:py-3 rounded-full glass-card"
               animate={{ opacity: [0.5, 1, 0.5] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
               {language === "fr"
-                ? "🪐 Cliquez sur une planète pour explorer"
-                : "🪐 Click a planet to explore"}
+                ? "🪐 Cliquez sur une planète"
+                : "🪐 Click a planet"}
             </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Section Panel */}
+      {/* Section Panel — centered modal */}
       <AnimatePresence>
         {activeNode && activeNode !== "home" && (
           <SectionPanel
@@ -399,7 +398,7 @@ const ConstellationMap = () => {
         )}
       </AnimatePresence>
 
-      {/* Home panel (profile) */}
+      {/* Home panel (profile) — centered */}
       <AnimatePresence>
         {activeNode === "home" && (
           <motion.div
@@ -413,35 +412,41 @@ const ConstellationMap = () => {
               onClick={() => setActiveNode(null)}
             />
             <motion.div
-              className="relative z-10 max-w-lg w-full glass-card rounded-2xl p-8 text-center"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 200 }}
+              className="relative z-10 max-w-md w-full glass-card rounded-2xl p-6 md:p-8 text-center"
+              initial={{ scale: 0.8, opacity: 0, y: 30 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.8, opacity: 0, y: 30 }}
+              transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
               <button
                 onClick={() => setActiveNode(null)}
-                className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute top-3 right-3 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
-              <img
-                src={profileImg}
-                alt="Japhet"
-                className="w-28 h-28 rounded-full mx-auto mb-4 border-3 border-primary/40 shadow-glow"
-              />
-              <h2 className="text-2xl font-orbitron font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+              <div className="relative inline-block mb-4">
+                <motion.div
+                  className="absolute inset-0 rounded-full"
+                  style={{ background: `radial-gradient(circle, hsl(195 100% 55% / 0.3) 0%, transparent 70%)` }}
+                  animate={{ scale: [1, 1.2, 1], opacity: [0.4, 0.7, 0.4] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                />
+                <img
+                  src={profileImg}
+                  alt="Japhet"
+                  className="relative w-24 h-24 md:w-28 md:h-28 rounded-full object-cover border-2 border-primary/40 shadow-glow"
+                />
+              </div>
+              <h2 className="text-xl md:text-2xl font-orbitron font-bold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
                 Japhet Calixte N'DRI
               </h2>
-              <p className="text-muted-foreground font-exo mb-4">
-                {language === "fr" ? "Junior Data Analyst" : "Junior Data Analyst"}
-              </p>
-              <p className="text-sm text-muted-foreground font-exo leading-relaxed">
+              <p className="text-sm text-muted-foreground font-exo mb-3">Junior Data Analyst</p>
+              <p className="text-xs md:text-sm text-muted-foreground font-exo leading-relaxed mb-5">
                 {language === "fr"
-                  ? "Passionné par l'intelligence artificielle et la data science. Explorez les planètes pour découvrir mon parcours !"
+                  ? "Passionné par l'IA et la data science. Explorez les planètes pour découvrir mon parcours !"
                   : "Passionate about AI and data science. Explore the planets to discover my journey!"}
               </p>
-              <div className="mt-6 flex justify-center gap-3">
+              <div className="flex justify-center gap-2 flex-wrap">
                 {[
                   { href: "https://github.com/Jcalixte24", label: "GitHub" },
                   { href: "https://www.linkedin.com/in/japhet-calixte-n'dri-0b73832a0", label: "LinkedIn" },
@@ -452,7 +457,7 @@ const ConstellationMap = () => {
                     href={link.href}
                     target={link.href.startsWith("http") ? "_blank" : undefined}
                     rel={link.href.startsWith("http") ? "noopener noreferrer" : undefined}
-                    className="px-4 py-2 rounded-lg glass-card text-xs font-exo text-muted-foreground hover:text-primary hover:border-primary/50 transition-all"
+                    className="px-3 py-1.5 rounded-lg glass-card text-xs font-exo text-muted-foreground hover:text-primary hover:border-primary/50 transition-all"
                   >
                     {link.label}
                   </a>
