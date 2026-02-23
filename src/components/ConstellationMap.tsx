@@ -1,7 +1,7 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Lock, Unlock, User, Briefcase, GraduationCap, Rocket, Cpu, Mail, Gamepad2, X } from "lucide-react";
+import { User, Briefcase, GraduationCap, Rocket, Cpu, Mail, Gamepad2, X, ChevronDown } from "lucide-react";
 import profileImg from "@/assets/japhet-profile-pro.jpg";
 import SectionPanel from "./SectionPanel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -12,8 +12,8 @@ export interface ConstellationNode {
   icon: React.ElementType;
   x: number;
   y: number;
-  mx: number; // mobile x
-  my: number; // mobile y
+  mx: number;
+  my: number;
   size: number;
   mobileSize: number;
   color: string;
@@ -106,38 +106,83 @@ const nodes: ConstellationNode[] = [
   },
 ];
 
-const unlockSequence = ["home", "about", "experience", "education", "projects", "skills", "hobbies", "contact"];
+// The chronological journey order
+const journey = ["home", "about", "experience", "education", "projects", "skills", "hobbies", "contact"];
 
 const ConstellationMap = () => {
   const { language } = useLanguage();
   const isMobile = useIsMobile();
-  const [unlockedNodes, setUnlockedNodes] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem("constellation-unlocked");
-    return saved ? new Set(JSON.parse(saved)) : new Set(["home"]);
-  });
-  const [activeNode, setActiveNode] = useState<string | null>(null);
-  const [hoveredNode, setHoveredNode] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [activeStep, setActiveStep] = useState(0); // 0 = overview, 1..N = zoomed into planet
+  const [showContent, setShowContent] = useState(false);
+  const isScrolling = useRef(false);
+  const touchStartY = useRef(0);
 
+  const totalSteps = journey.length; // 0=overview + planets with content shown inline
+
+  const scrollToStep = useCallback((step: number) => {
+    if (isScrolling.current) return;
+    const clamped = Math.max(0, Math.min(step, totalSteps));
+    if (clamped === activeStep) return;
+
+    isScrolling.current = true;
+    setShowContent(false);
+
+    // First: zoom transition
+    setActiveStep(clamped);
+
+    // After zoom, show content
+    setTimeout(() => {
+      if (clamped > 0) {
+        setShowContent(true);
+      }
+      isScrolling.current = false;
+    }, 700);
+  }, [activeStep, totalSteps]);
+
+  // Wheel handler
   useEffect(() => {
-    localStorage.setItem("constellation-unlocked", JSON.stringify([...unlockedNodes]));
-  }, [unlockedNodes]);
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (isScrolling.current) return;
+      if (e.deltaY > 30) scrollToStep(activeStep + 1);
+      else if (e.deltaY < -30) scrollToStep(activeStep - 1);
+    };
+    const el = containerRef.current;
+    if (el) el.addEventListener("wheel", handleWheel, { passive: false });
+    return () => { if (el) el.removeEventListener("wheel", handleWheel); };
+  }, [scrollToStep, activeStep]);
 
-  const handleNodeClick = useCallback((nodeId: string) => {
-    if (!unlockedNodes.has(nodeId)) return;
-    setActiveNode(nodeId);
-    const node = nodes.find(n => n.id === nodeId);
-    if (node) {
-      setUnlockedNodes(prev => {
-        const next = new Set(prev);
-        node.connectedTo.forEach(id => next.add(id));
-        return next;
-      });
-    }
-  }, [unlockedNodes]);
+  // Touch handler for mobile
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartY.current = e.touches[0].clientY;
+    };
+    const handleTouchEnd = (e: TouchEvent) => {
+      if (isScrolling.current) return;
+      const delta = touchStartY.current - e.changedTouches[0].clientY;
+      if (delta > 50) scrollToStep(activeStep + 1);
+      else if (delta < -50) scrollToStep(activeStep - 1);
+    };
+    el.addEventListener("touchstart", handleTouchStart, { passive: true });
+    el.addEventListener("touchend", handleTouchEnd, { passive: true });
+    return () => {
+      el.removeEventListener("touchstart", handleTouchStart);
+      el.removeEventListener("touchend", handleTouchEnd);
+    };
+  }, [scrollToStep, activeStep]);
 
-  const handleUnlockAll = () => {
-    setUnlockedNodes(new Set(unlockSequence));
-  };
+  // Keyboard
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === " ") { e.preventDefault(); scrollToStep(activeStep + 1); }
+      if (e.key === "ArrowUp") { e.preventDefault(); scrollToStep(activeStep - 1); }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [scrollToStep, activeStep]);
 
   const getPos = (node: ConstellationNode) => ({
     x: isMobile ? node.mx : node.x,
@@ -146,91 +191,99 @@ const ConstellationMap = () => {
 
   const getSize = (node: ConstellationNode) => isMobile ? node.mobileSize : node.size;
 
+  // Compute the map transform based on activeStep
+  const getMapTransform = () => {
+    if (activeStep === 0) {
+      return { scale: 1, x: 0, y: 0 };
+    }
+    const nodeId = journey[activeStep - 1];
+    const node = nodes.find(n => n.id === nodeId);
+    if (!node) return { scale: 1, x: 0, y: 0 };
+    const pos = getPos(node);
+    // Zoom into the planet: scale up and translate so planet is centered
+    const scale = isMobile ? 3 : 3.5;
+    const x = 50 - pos.x;
+    const y = 50 - pos.y;
+    return { scale, x: x * scale, y: y * scale };
+  };
+
+  const transform = getMapTransform();
+  const currentNodeId = activeStep > 0 ? journey[activeStep - 1] : null;
+  const currentNode = currentNodeId ? nodes.find(n => n.id === currentNodeId) : null;
+
   return (
-    <div className="relative w-full h-screen overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-screen overflow-hidden">
       <div className="absolute inset-0 gradient-nebula opacity-60" />
 
-      {/* SVG Connections */}
-      <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-        {nodes.map(node =>
-          node.connectedTo.map(targetId => {
-            const target = nodes.find(n => n.id === targetId);
-            if (!target) return null;
-            const isUnlocked = unlockedNodes.has(node.id) && unlockedNodes.has(targetId);
-            const isNextPath = unlockedNodes.has(node.id) && !unlockedNodes.has(targetId);
-            const p1 = getPos(node);
-            const p2 = getPos(target);
-            return (
-              <motion.line
-                key={`${node.id}-${targetId}`}
-                x1={`${p1.x}%`} y1={`${p1.y}%`}
-                x2={`${p2.x}%`} y2={`${p2.y}%`}
-                stroke={isUnlocked ? `hsl(${node.glowColor})` : isNextPath ? "hsl(195, 100%, 55%)" : "hsl(230, 20%, 20%)"}
-                strokeWidth={isUnlocked ? 2 : 1}
-                strokeDasharray={isUnlocked ? "none" : "8 4"}
-                opacity={isUnlocked ? 0.6 : isNextPath ? 0.4 : 0.15}
-                filter={isUnlocked ? "url(#glow)" : undefined}
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1.5, delay: 0.5 }}
-              />
-            );
-          })
-        )}
-      </svg>
-
-      {/* Nodes */}
-      {nodes.map((node, index) => {
-        const Icon = node.icon;
-        const isUnlocked = unlockedNodes.has(node.id);
-        const isHome = node.id === "home";
-        const isHovered = hoveredNode === node.id;
-        const isNext = !isUnlocked && nodes.some(n => n.connectedTo.includes(node.id) && unlockedNodes.has(n.id));
-        const pos = getPos(node);
-        const sz = getSize(node);
-
-        return (
-          <motion.div
-            key={node.id}
-            className="absolute z-20"
-            style={{
-              left: `${pos.x}%`,
-              top: `${pos.y}%`,
-              transform: "translate(-50%, -50%)",
-            }}
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ delay: index * 0.12, type: "spring", stiffness: 100 }}
-          >
-            {/* Orbit rings for home */}
-            {isHome && !isMobile && (
-              <>
-                <motion.div
-                  className="absolute rounded-full border border-primary/20"
-                  style={{ width: sz * 2.3, height: sz * 2.3, left: -(sz * 0.65), top: -(sz * 0.65) }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+      {/* Zoomable map container */}
+      <motion.div
+        className="absolute inset-0 w-full h-full"
+        animate={{
+          scale: transform.scale,
+          x: `${transform.x}%`,
+          y: `${transform.y}%`,
+        }}
+        transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        style={{ transformOrigin: "50% 50%" }}
+      >
+        {/* SVG Connections */}
+        <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
+          <defs>
+            <filter id="glow">
+              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {nodes.map(node =>
+            node.connectedTo.map(targetId => {
+              const target = nodes.find(n => n.id === targetId);
+              if (!target) return null;
+              const p1 = getPos(node);
+              const p2 = getPos(target);
+              const isActive = currentNodeId === node.id || currentNodeId === targetId;
+              return (
+                <motion.line
+                  key={`${node.id}-${targetId}`}
+                  x1={`${p1.x}%`} y1={`${p1.y}%`}
+                  x2={`${p2.x}%`} y2={`${p2.y}%`}
+                  stroke={`hsl(${node.glowColor})`}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                  opacity={isActive ? 0.8 : 0.4}
+                  filter="url(#glow)"
+                  initial={{ pathLength: 0 }}
+                  animate={{ pathLength: 1 }}
+                  transition={{ duration: 1.5, delay: 0.3 }}
                 />
-                <motion.div
-                  className="absolute rounded-full border border-primary/10"
-                  style={{ width: sz * 3.2, height: sz * 3.2, left: -(sz * 1.1), top: -(sz * 1.1) }}
-                  animate={{ rotate: -360 }}
-                  transition={{ duration: 50, repeat: Infinity, ease: "linear" }}
-                />
-              </>
-            )}
+              );
+            })
+          )}
+        </svg>
 
-            {/* Planet glow */}
-            {isUnlocked && (
+        {/* Nodes */}
+        {nodes.map((node, index) => {
+          const Icon = node.icon;
+          const isHome = node.id === "home";
+          const isActive = currentNodeId === node.id;
+          const pos = getPos(node);
+          const sz = getSize(node);
+
+          return (
+            <motion.div
+              key={node.id}
+              className="absolute z-20"
+              style={{
+                left: `${pos.x}%`,
+                top: `${pos.y}%`,
+                transform: "translate(-50%, -50%)",
+              }}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+            >
+              {/* Planet glow */}
               <motion.div
                 className="absolute rounded-full"
                 style={{
@@ -238,169 +291,190 @@ const ConstellationMap = () => {
                   height: sz * 2,
                   left: -(sz / 2),
                   top: -(sz / 2),
-                  background: `radial-gradient(circle, hsl(${node.glowColor} / 0.3) 0%, transparent 70%)`,
+                  background: `radial-gradient(circle, hsl(${node.glowColor} / ${isActive ? 0.5 : 0.25}) 0%, transparent 70%)`,
                 }}
                 animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.8, 0.5] }}
                 transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
               />
-            )}
 
-            {/* Locked pulse */}
-            {isNext && (
-              <motion.div
-                className="absolute rounded-full border-2 border-primary/40"
-                style={{
-                  width: sz + 16,
-                  height: sz + 16,
-                  left: -8,
-                  top: -8,
-                }}
-                animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
-                transition={{ duration: 2, repeat: Infinity }}
-              />
-            )}
-
-            {/* Planet body */}
-            <motion.button
-              className="relative rounded-full flex items-center justify-center cursor-pointer focus:outline-none"
-              style={{
-                width: sz,
-                height: sz,
-                background: isUnlocked
-                  ? `radial-gradient(circle at 30% 30%, hsl(${node.glowColor} / 0.9), hsl(${node.glowColor} / 0.4))`
-                  : "radial-gradient(circle at 30% 30%, hsl(230, 20%, 20%), hsl(230, 25%, 10%))",
-                boxShadow: isUnlocked
-                  ? `0 0 ${isHovered ? 40 : 20}px hsl(${node.glowColor} / ${isHovered ? 0.6 : 0.3}), inset 0 -3px 6px hsl(0 0% 0% / 0.3)`
-                  : "inset 0 -3px 6px hsl(0 0% 0% / 0.5)",
-              }}
-              onClick={() => handleNodeClick(node.id)}
-              onMouseEnter={() => setHoveredNode(node.id)}
-              onMouseLeave={() => setHoveredNode(null)}
-              whileHover={isUnlocked ? { scale: 1.15 } : { scale: 1.05 }}
-              whileTap={isUnlocked ? { scale: 0.95 } : undefined}
-              animate={isHome ? { y: [0, -6, 0] } : undefined}
-              transition={isHome ? { duration: 4, repeat: Infinity, ease: "easeInOut" } : undefined}
-              disabled={!isUnlocked}
-            >
-              {isHome ? (
-                <img
-                  src={profileImg}
-                  alt="Japhet"
-                  className="w-full h-full rounded-full object-cover border-2 border-primary/50"
-                />
-              ) : isUnlocked ? (
-                <Icon style={{ width: sz * 0.35, height: sz * 0.35 }} className="text-foreground drop-shadow-lg" />
-              ) : (
-                <Lock style={{ width: sz * 0.3, height: sz * 0.3 }} className="text-muted-foreground/50" />
+              {/* Orbit rings for home */}
+              {isHome && !isMobile && (
+                <>
+                  <motion.div
+                    className="absolute rounded-full border border-primary/20"
+                    style={{ width: sz * 2.3, height: sz * 2.3, left: -(sz * 0.65), top: -(sz * 0.65) }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 30, repeat: Infinity, ease: "linear" }}
+                  />
+                </>
               )}
-            </motion.button>
 
-            {/* Label */}
-            <motion.div
-              className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-center"
-              style={{ top: sz + 6 }}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.12 + 0.5 }}
-            >
-              <span
-                className={`text-[10px] md:text-xs font-orbitron font-medium tracking-wider uppercase ${
-                  isUnlocked ? "text-foreground" : "text-muted-foreground/40"
-                }`}
+              {/* Active ring */}
+              {isActive && (
+                <motion.div
+                  className="absolute rounded-full border-2"
+                  style={{
+                    width: sz + 20,
+                    height: sz + 20,
+                    left: -10,
+                    top: -10,
+                    borderColor: `hsl(${node.glowColor})`,
+                  }}
+                  animate={{ scale: [1, 1.4], opacity: [0.8, 0] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+              )}
+
+              {/* Planet body */}
+              <motion.div
+                className="relative rounded-full flex items-center justify-center"
+                style={{
+                  width: sz,
+                  height: sz,
+                  background: `radial-gradient(circle at 30% 30%, hsl(${node.glowColor} / 0.9), hsl(${node.glowColor} / 0.4))`,
+                  boxShadow: `0 0 ${isActive ? 40 : 20}px hsl(${node.glowColor} / ${isActive ? 0.6 : 0.3}), inset 0 -3px 6px hsl(0 0% 0% / 0.3)`,
+                }}
               >
+                {isHome ? (
+                  <img
+                    src={profileImg}
+                    alt="Japhet"
+                    className="w-full h-full rounded-full object-cover border-2 border-primary/50"
+                  />
+                ) : (
+                  <Icon style={{ width: sz * 0.35, height: sz * 0.35 }} className="text-foreground drop-shadow-lg" />
+                )}
+              </motion.div>
+
+              {/* Label */}
+              <motion.div
+                className="absolute left-1/2 -translate-x-1/2 whitespace-nowrap text-center"
+                style={{ top: sz + 6 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: index * 0.1 + 0.5 }}
+              >
+                <span className={`text-[10px] md:text-xs font-orbitron font-medium tracking-wider uppercase ${isActive ? "text-primary" : "text-foreground"}`}>
+                  {node.label[language]}
+                </span>
+              </motion.div>
+            </motion.div>
+          );
+        })}
+      </motion.div>
+
+      {/* Top bar - only visible in overview */}
+      <AnimatePresence>
+        {activeStep === 0 && (
+          <motion.div
+            className="absolute top-0 left-0 right-0 z-30 p-3 md:p-6 flex items-start justify-between"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ delay: 0.3 }}
+          >
+            <div>
+              <h1 className="text-base md:text-2xl font-orbitron font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+                JCN
+                <span className="hidden md:inline"> — Japhet Calixte N'DRI</span>
+              </h1>
+              <p className="text-[10px] md:text-sm text-muted-foreground font-exo">
+                {language === "fr" ? "Explorez mon univers" : "Explore my universe"}
+              </p>
+            </div>
+
+            {/* Step indicators */}
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full glass-card text-[10px] md:text-xs font-exo">
+              <span className="text-primary font-semibold">{activeStep}</span>
+              <span className="text-muted-foreground">/ {totalSteps}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Step indicator dots - always visible */}
+      <div className="fixed right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
+        {journey.map((nodeId, i) => {
+          const node = nodes.find(n => n.id === nodeId)!;
+          const stepIndex = i + 1;
+          return (
+            <button
+              key={nodeId}
+              onClick={() => scrollToStep(stepIndex)}
+              className="group relative flex items-center justify-end"
+            >
+              <span className="absolute right-5 whitespace-nowrap text-[10px] font-exo text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity pr-1">
                 {node.label[language]}
               </span>
-              {!isUnlocked && isNext && (
-                <motion.span
-                  className="block text-[8px] md:text-[10px] text-primary/60 mt-0.5"
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                >
-                  {language === "fr" ? "Débloquer" : "Unlock"}
-                </motion.span>
-              )}
-            </motion.div>
-          </motion.div>
-        );
-      })}
-
-      {/* Top bar */}
-      <div className="absolute top-0 left-0 right-0 z-30 p-3 md:p-6 flex items-start justify-between">
-        <motion.div
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h1 className="text-base md:text-2xl font-orbitron font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
-            JCN
-            <span className="hidden md:inline"> — Japhet Calixte N'DRI</span>
-          </h1>
-          <p className="text-[10px] md:text-sm text-muted-foreground font-exo">
-            {language === "fr" ? "Explorez mon univers" : "Explore my universe"}
-          </p>
-        </motion.div>
-
-        <motion.div
-          className="flex items-center gap-2"
-          initial={{ opacity: 0, x: 30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-full glass-card text-[10px] md:text-xs font-exo">
-            <span className="text-primary font-semibold">{unlockedNodes.size}</span>
-            <span className="text-muted-foreground">/ {nodes.length}</span>
-          </div>
-
-          {unlockedNodes.size < nodes.length && (
-            <motion.button
-              onClick={handleUnlockAll}
-              className="flex items-center gap-1.5 px-2 py-1 rounded-full glass-card text-[10px] md:text-xs font-exo text-muted-foreground hover:text-primary transition-colors"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <Unlock className="w-3 h-3" />
-              <span className="hidden sm:inline">{language === "fr" ? "Tout débloquer" : "Unlock all"}</span>
-            </motion.button>
-          )}
-        </motion.div>
+              <motion.div
+                className="rounded-full"
+                style={{
+                  width: activeStep === stepIndex ? 10 : 6,
+                  height: activeStep === stepIndex ? 10 : 6,
+                  backgroundColor: activeStep === stepIndex ? `hsl(${node.glowColor})` : "hsl(var(--muted-foreground) / 0.3)",
+                  boxShadow: activeStep === stepIndex ? `0 0 8px hsl(${node.glowColor} / 0.6)` : "none",
+                }}
+                animate={{ scale: activeStep === stepIndex ? [1, 1.3, 1] : 1 }}
+                transition={{ duration: 2, repeat: activeStep === stepIndex ? Infinity : 0 }}
+              />
+            </button>
+          );
+        })}
       </div>
 
-      {/* Bottom hint */}
+      {/* Scroll hint */}
       <AnimatePresence>
-        {!activeNode && (
+        {activeStep === 0 && (
           <motion.div
-            className="absolute bottom-4 md:bottom-6 left-1/2 -translate-x-1/2 z-30"
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-1"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ delay: 1.5 }}
           >
             <motion.p
-              className="text-xs md:text-sm text-muted-foreground font-exo text-center px-4 py-2 md:px-6 md:py-3 rounded-full glass-card"
-              animate={{ opacity: [0.5, 1, 0.5] }}
+              className="text-xs md:text-sm text-muted-foreground font-exo"
+              animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              {language === "fr"
-                ? "🪐 Cliquez sur une planète"
-                : "🪐 Click a planet"}
+              {language === "fr" ? "Scrollez pour explorer" : "Scroll to explore"}
             </motion.p>
+            <motion.div
+              animate={{ y: [0, 8, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity }}
+            >
+              <ChevronDown className="w-5 h-5 text-primary" />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Section Panel — centered modal */}
+      {/* Content overlay when zoomed */}
       <AnimatePresence>
-        {activeNode && activeNode !== "home" && (
-          <SectionPanel
-            sectionId={activeNode}
-            onClose={() => setActiveNode(null)}
-          />
+        {showContent && currentNode && currentNodeId !== "home" && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center p-2 md:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            />
+            <SectionPanel
+              sectionId={currentNodeId}
+              onClose={() => setShowContent(false)}
+            />
+          </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Home panel (profile) — centered */}
+      {/* Home content when zoomed into home */}
       <AnimatePresence>
-        {activeNode === "home" && (
+        {showContent && currentNodeId === "home" && (
           <motion.div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
@@ -408,8 +482,8 @@ const ConstellationMap = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="absolute inset-0 bg-background/80 backdrop-blur-md"
-              onClick={() => setActiveNode(null)}
+              className="absolute inset-0 bg-background/70 backdrop-blur-sm"
+              onClick={() => setShowContent(false)}
             />
             <motion.div
               className="relative z-10 max-w-md w-full glass-card rounded-2xl p-6 md:p-8 text-center"
@@ -419,7 +493,7 @@ const ConstellationMap = () => {
               transition={{ type: "spring", stiffness: 200, damping: 20 }}
             >
               <button
-                onClick={() => setActiveNode(null)}
+                onClick={() => setShowContent(false)}
                 className="absolute top-3 right-3 p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
               >
                 <X className="w-4 h-4" />
@@ -443,8 +517,8 @@ const ConstellationMap = () => {
               <p className="text-sm text-muted-foreground font-exo mb-3">Junior Data Analyst</p>
               <p className="text-xs md:text-sm text-muted-foreground font-exo leading-relaxed mb-5">
                 {language === "fr"
-                  ? "Passionné par l'IA et la data science. Explorez les planètes pour découvrir mon parcours !"
-                  : "Passionate about AI and data science. Explore the planets to discover my journey!"}
+                  ? "Passionné par l'IA et la data science. Scrollez pour découvrir mon parcours !"
+                  : "Passionate about AI and data science. Scroll to discover my journey!"}
               </p>
               <div className="flex justify-center gap-2 flex-wrap">
                 {[
