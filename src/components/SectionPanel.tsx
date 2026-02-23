@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import { motion } from "framer-motion";
 import { X, ArrowLeft } from "lucide-react";
 import About from "./About";
@@ -34,7 +35,7 @@ const sectionComponents: Record<string, React.ComponentType> = {
   contact: Contact,
 };
 
-const SectionPanel = ({ sectionId, onClose }: SectionPanelProps) => {
+const SectionPanel = forwardRef<HTMLDivElement, SectionPanelProps>(({ sectionId, onClose }, ref) => {
   const { language } = useLanguage();
   const SectionComponent = sectionComponents[sectionId];
   const meta = sectionMeta[sectionId];
@@ -42,44 +43,38 @@ const SectionPanel = ({ sectionId, onClose }: SectionPanelProps) => {
 
   return (
     <motion.div
+      ref={ref}
       className="relative z-10 w-full max-w-4xl max-h-[85vh] overflow-y-auto cosmic-scrollbar rounded-2xl glass-card border border-border/50"
       initial={{ scale: 0.85, opacity: 0, y: 40 }}
       animate={{ scale: 1, opacity: 1, y: 0 }}
       exit={{ scale: 0.85, opacity: 0, y: 40 }}
       transition={{ type: "spring", damping: 25, stiffness: 200 }}
     >
-      {/* Decorative top gradient bar */}
       <div className={`h-1 w-full bg-gradient-to-r ${meta.gradient} rounded-t-2xl`} />
 
-      {/* Close button */}
       <div className="sticky top-0 z-20 flex items-center justify-between px-4 py-3 bg-card/80 backdrop-blur-md border-b border-border/30">
-        <motion.button
-          onClick={onClose}
+        <motion.button onClick={onClose}
           className="flex items-center gap-2 px-3 py-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all text-xs font-exo"
-          whileHover={{ x: -3 }}
-          whileTap={{ scale: 0.95 }}
+          whileHover={{ x: -3 }} whileTap={{ scale: 0.95 }}
         >
           <ArrowLeft className="w-4 h-4" />
-          <span className="hidden sm:inline">
-            {language === "fr" ? "Fermer" : "Close"}
-          </span>
+          <span className="hidden sm:inline">{language === "fr" ? "Fermer" : "Close"}</span>
         </motion.button>
-        <motion.button
-          onClick={onClose}
+        <motion.button onClick={onClose}
           className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
+          whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
         >
           <X className="w-4 h-4" />
         </motion.button>
       </div>
 
-      {/* Content */}
       <div className="pb-8">
         <SectionComponent />
       </div>
     </motion.div>
   );
-};
+});
+
+SectionPanel.displayName = "SectionPanel";
 
 export default SectionPanel;
