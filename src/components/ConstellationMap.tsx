@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { User, Briefcase, GraduationCap, Rocket, Cpu, Mail, Gamepad2, X, ChevronDown } from "lucide-react";
+import { User, Briefcase, GraduationCap, Rocket, Cpu, Mail, Gamepad2, X, ChevronDown, Maximize2 } from "lucide-react";
 import profileImg from "@/assets/japhet-profile-pro.jpg";
 import SectionPanel from "./SectionPanel";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -74,6 +74,8 @@ const ConstellationMap = () => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [activeStep, setActiveStep] = useState(0);
   const [showContent, setShowContent] = useState(false);
+  const [overviewMode, setOverviewMode] = useState(false);
+  const [isZooming, setIsZooming] = useState(false);
   const isScrolling = useRef(false);
   const touchStartY = useRef(0);
 
@@ -100,15 +102,40 @@ const ConstellationMap = () => {
 
     isScrolling.current = true;
     setShowContent(false);
+    setOverviewMode(false);
+    setIsZooming(true);
     setActiveStep(clamped);
 
     setTimeout(() => {
+      setIsZooming(false);
       if (clamped > 0) {
         setShowContent(true);
       }
       isScrolling.current = false;
-    }, 700);
+    }, 900);
   }, [activeStep, totalSteps]);
+
+  const jumpToNode = useCallback((nodeId: string) => {
+    const stepIndex = journey.indexOf(nodeId) + 1;
+    if (stepIndex > 0) {
+      isScrolling.current = true;
+      setOverviewMode(false);
+      setShowContent(false);
+      setIsZooming(true);
+      setActiveStep(stepIndex);
+      setTimeout(() => {
+        setIsZooming(false);
+        setShowContent(true);
+        isScrolling.current = false;
+      }, 900);
+    }
+  }, []);
+
+  const goToOverview = useCallback(() => {
+    setShowContent(false);
+    setActiveStep(0);
+    setOverviewMode(true);
+  }, []);
 
   // Wheel handler - respects content scroll
   useEffect(() => {
@@ -194,7 +221,7 @@ const ConstellationMap = () => {
     const node = nodes.find(n => n.id === nodeId);
     if (!node) return { scale: 1, x: 0, y: 0 };
     const pos = getPos(node);
-    const scale = isMobile ? 3 : 3.5;
+    const scale = isMobile ? 4 : 5;
     return { scale, x: (50 - pos.x) * scale, y: (50 - pos.y) * scale };
   };
 
@@ -203,14 +230,55 @@ const ConstellationMap = () => {
   const currentNode = currentNodeId ? nodes.find(n => n.id === currentNodeId) : null;
 
   return (
-    <div ref={containerRef} className="relative w-full h-screen overflow-hidden">
+    <div ref={containerRef} className="relative w-full h-screen overflow-hidden bg-background">
       <div className="absolute inset-0 gradient-nebula opacity-60" />
+
+      {/* Warp speed lines during zoom */}
+      <AnimatePresence>
+        {isZooming && (
+          <motion.div className="absolute inset-0 z-[45] pointer-events-none overflow-hidden"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+          >
+            {Array.from({ length: 30 }).map((_, i) => {
+              const angle = (i / 30) * 360;
+              const rad = (angle * Math.PI) / 180;
+              return (
+                <motion.div key={i} className="absolute"
+                  style={{
+                    left: "50%", top: "50%", width: 2, height: 0,
+                    background: `linear-gradient(to bottom, transparent, hsl(195 100% 70% / 0.6), transparent)`,
+                    transformOrigin: "center top",
+                    transform: `rotate(${angle}deg)`,
+                  }}
+                  animate={{ height: [0, 200 + Math.random() * 300], opacity: [0, 0.8, 0] }}
+                  transition={{ duration: 0.7, ease: "easeOut", delay: Math.random() * 0.15 }}
+                />
+              );
+            })}
+            <motion.div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-background/50"
+              animate={{ opacity: [0, 0.6, 0] }} transition={{ duration: 0.8 }}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Vignette effect when zoomed in */}
+      <AnimatePresence>
+        {activeStep > 0 && !overviewMode && (
+          <motion.div className="absolute inset-0 z-[15] pointer-events-none"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            style={{
+              background: "radial-gradient(ellipse at center, transparent 30%, hsl(var(--background) / 0.6) 100%)",
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Zoomable map */}
       <motion.div
         className="absolute inset-0 w-full h-full"
         animate={{ scale: transform.scale, x: `${transform.x}%`, y: `${transform.y}%` }}
-        transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+        transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
         style={{ transformOrigin: "50% 50%" }}
       >
         <svg className="absolute inset-0 w-full h-full z-10 pointer-events-none">
@@ -246,10 +314,13 @@ const ConstellationMap = () => {
           const pos = getPos(node);
           const sz = getSize(node);
           return (
-            <motion.div key={node.id} className="absolute z-20"
+            <motion.div key={node.id}
+              className={`absolute z-20 ${overviewMode ? "cursor-pointer" : ""}`}
               style={{ left: `${pos.x}%`, top: `${pos.y}%`, transform: "translate(-50%, -50%)" }}
               initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: index * 0.1, type: "spring", stiffness: 100 }}
+              onClick={overviewMode ? () => jumpToNode(node.id) : undefined}
+              whileHover={overviewMode ? { scale: 1.15 } : undefined}
             >
               <motion.div className="absolute rounded-full"
                 style={{ width: sz * 2, height: sz * 2, left: -(sz / 2), top: -(sz / 2),
@@ -315,6 +386,37 @@ const ConstellationMap = () => {
         )}
       </AnimatePresence>
 
+      {/* Overview button */}
+      <AnimatePresence>
+        {activeStep > 0 && !overviewMode && !showContent && (
+          <motion.button
+            className="fixed top-4 left-4 z-50 flex items-center gap-2 px-3 py-2 rounded-full glass-card text-xs font-exo text-muted-foreground hover:text-primary hover:border-primary/50 transition-all"
+            onClick={goToOverview}
+            initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+            whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
+          >
+            <Maximize2 className="w-4 h-4" />
+            <span>{language === "fr" ? "Vue d'ensemble" : "Overview"}</span>
+          </motion.button>
+        )}
+      </AnimatePresence>
+
+      {/* Overview mode label */}
+      <AnimatePresence>
+        {overviewMode && (
+          <motion.div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-1"
+            initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+          >
+            <span className="text-sm md:text-base font-orbitron font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">
+              {language === "fr" ? "Sélectionnez une planète" : "Select a planet"}
+            </span>
+            <span className="text-[10px] md:text-xs text-muted-foreground font-exo">
+              {language === "fr" ? "Cliquez pour explorer" : "Click to explore"}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Step dots */}
       <div className="fixed right-3 top-1/2 -translate-y-1/2 z-40 flex flex-col gap-2">
         {journey.map((nodeId, i) => {
@@ -355,10 +457,10 @@ const ConstellationMap = () => {
         )}
       </AnimatePresence>
 
-      {/* "Scroll to continue" hint on content */}
+      {/* "Scroll to continue" hint + overview shortcut on content */}
       <AnimatePresence>
         {showContent && currentNodeId && currentNodeId !== "home" && (
-          <motion.div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-1"
+          <motion.div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[60] flex items-center gap-3"
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
           >
             <motion.p className="text-[10px] md:text-xs text-muted-foreground/70 font-exo px-3 py-1 rounded-full glass-card"
@@ -366,6 +468,12 @@ const ConstellationMap = () => {
             >
               {language === "fr" ? "↓ Scrollez pour continuer" : "↓ Scroll to continue"}
             </motion.p>
+            <button onClick={goToOverview}
+              className="flex items-center gap-1.5 px-3 py-1 rounded-full glass-card text-[10px] md:text-xs font-exo text-muted-foreground hover:text-primary transition-all"
+            >
+              <Maximize2 className="w-3 h-3" />
+              <span>{language === "fr" ? "Vue d'ensemble" : "Overview"}</span>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
