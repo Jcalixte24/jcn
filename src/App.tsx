@@ -22,6 +22,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/cv" element={<CV />} />
+            <Route path="/constellation" element={<Constellation />} />
             <Route path="/github-projects" element={<GithubProjects />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
