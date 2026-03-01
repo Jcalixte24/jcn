@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "./pages/Index";
 import CV from "./pages/CV";
+import Constellation from "./pages/Constellation";
 import GithubProjects from "./pages/GithubProjects";
 import NotFound from "./pages/NotFound";
 
