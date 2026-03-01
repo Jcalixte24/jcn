@@ -1,4 +1,5 @@
 import StarField from "@/components/StarField";
+import SpaceParticles from "@/components/SpaceParticles";
 import ConstellationMap from "@/components/ConstellationMap";
 import LanguageSwitch from "@/components/LanguageSwitch";
 import { RecruiterChatbot } from "@/components/RecruiterChatbot";
