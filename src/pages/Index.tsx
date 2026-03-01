@@ -1,4 +1,5 @@
 import StarField from "@/components/StarField";
+import SpaceParticles from "@/components/SpaceParticles";
 import ConstellationMap from "@/components/ConstellationMap";
 import LanguageSwitch from "@/components/LanguageSwitch";
 import { RecruiterChatbot } from "@/components/RecruiterChatbot";
@@ -13,6 +14,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background relative">
       <StarField />
+      <SpaceParticles />
       <ConstellationMap />
 
       {/* Floating controls */}

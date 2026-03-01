@@ -237,27 +237,68 @@ const ConstellationMap = () => {
       <AnimatePresence>
         {isZooming && (
           <motion.div className="absolute inset-0 z-[45] pointer-events-none overflow-hidden"
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
           >
-            {Array.from({ length: 30 }).map((_, i) => {
-              const angle = (i / 30) * 360;
-              const rad = (angle * Math.PI) / 180;
+            {/* Warp speed streaks */}
+            {Array.from({ length: 50 }).map((_, i) => {
+              const angle = (i / 50) * 360;
+              const hue = 180 + Math.random() * 80;
+              const len = 150 + Math.random() * 400;
               return (
                 <motion.div key={i} className="absolute"
                   style={{
-                    left: "50%", top: "50%", width: 2, height: 0,
-                    background: `linear-gradient(to bottom, transparent, hsl(195 100% 70% / 0.6), transparent)`,
+                    left: "50%", top: "50%", width: 1.5 + Math.random(), height: 0,
+                    background: `linear-gradient(to bottom, transparent, hsla(${hue}, 80%, 70%, 0.7), transparent)`,
                     transformOrigin: "center top",
                     transform: `rotate(${angle}deg)`,
                   }}
-                  animate={{ height: [0, 200 + Math.random() * 300], opacity: [0, 0.8, 0] }}
-                  transition={{ duration: 0.7, ease: "easeOut", delay: Math.random() * 0.15 }}
+                  animate={{ height: [0, len], opacity: [0, 0.9, 0] }}
+                  transition={{ duration: 0.6, ease: "easeOut", delay: Math.random() * 0.12 }}
                 />
               );
             })}
-            <motion.div className="absolute inset-0 bg-gradient-radial from-transparent via-transparent to-background/50"
-              animate={{ opacity: [0, 0.6, 0] }} transition={{ duration: 0.8 }}
+            {/* Central flash */}
+            <motion.div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+              <motion.div className="rounded-full"
+                style={{ width: 10, height: 10, background: "radial-gradient(circle, rgba(255,255,255,0.9) 0%, rgba(180,220,255,0.4) 40%, transparent 70%)" }}
+                animate={{ width: [10, 600], height: [10, 600], opacity: [1, 0] }}
+                transition={{ duration: 0.5, ease: "easeOut", delay: 0.15 }}
+              />
+            </motion.div>
+            {/* Radial speed blur */}
+            <motion.div className="absolute inset-0"
+              style={{ background: "radial-gradient(ellipse at center, transparent 20%, hsl(var(--background) / 0.6) 100%)" }}
+              animate={{ opacity: [0, 0.7, 0] }} transition={{ duration: 0.7 }}
             />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Lens flare on arrival */}
+      <AnimatePresence>
+        {activeStep > 0 && !isZooming && !overviewMode && currentNode && (
+          <motion.div className="fixed inset-0 z-[16] pointer-events-none flex items-center justify-center"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.4 }}
+          >
+            {/* Anamorphic streak */}
+            <motion.div className="absolute"
+              style={{ width: "120vw", height: 1, background: `linear-gradient(90deg, transparent, hsl(${currentNode.glowColor} / 0.2), hsl(${currentNode.glowColor} / 0.4), hsl(${currentNode.glowColor} / 0.2), transparent)` }}
+              initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: [0, 0.6, 0.3] }}
+              transition={{ duration: 1.2, ease: "easeOut" }}
+            />
+            {/* Glow orbs */}
+            {[0.15, 0.25, 0.4].map((offset, i) => (
+              <motion.div key={i} className="absolute rounded-full"
+                style={{
+                  width: 20 + i * 15, height: 20 + i * 15,
+                  left: `${50 + (i - 1) * 12}%`, top: "50%",
+                  background: `radial-gradient(circle, hsl(${currentNode.glowColor} / ${0.15 - i * 0.03}), transparent)`,
+                }}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: [0, 1.5, 1], opacity: [0, offset, offset * 0.5] }}
+                transition={{ duration: 1, delay: 0.2 + i * 0.1 }}
+              />
+            ))}
           </motion.div>
         )}
       </AnimatePresence>
