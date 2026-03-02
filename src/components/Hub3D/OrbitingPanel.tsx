@@ -14,6 +14,7 @@ interface OrbitingPanelProps {
   yOffset: number;
   speed: number;
   onSelect: (id: string) => void;
+  mobile?: boolean;
 }
 
 const OrbitingPanel = ({
@@ -27,91 +28,115 @@ const OrbitingPanel = ({
   yOffset,
   speed,
   onSelect,
+  mobile = false,
 }: OrbitingPanelProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const [hovered, setHovered] = useState(false);
   const baseAngle = (index / total) * Math.PI * 2;
   const currentSpeed = useRef(speed);
+  const scaleVec = useRef(new THREE.Vector3(1, 1, 1));
+
+  const panelRadius = mobile ? radius * 0.8 : radius;
 
   useFrame((state) => {
     if (!groupRef.current) return;
 
-    // Smooth speed transition on hover
-    const targetSpeed = hovered ? speed * 0.15 : speed;
+    const targetSpeed = hovered ? speed * 0.1 : speed;
     currentSpeed.current += (targetSpeed - currentSpeed.current) * 0.05;
 
     const t = state.clock.elapsedTime * currentSpeed.current + baseAngle;
-    groupRef.current.position.x = Math.cos(t) * radius;
-    groupRef.current.position.z = Math.sin(t) * radius;
-    groupRef.current.position.y = yOffset + Math.sin(t * 0.5) * 0.15;
+    groupRef.current.position.x = Math.cos(t) * panelRadius;
+    groupRef.current.position.z = Math.sin(t) * panelRadius;
+    groupRef.current.position.y = yOffset + Math.sin(t * 0.5) * 0.2;
 
-    // Face outward from center
     groupRef.current.lookAt(0, groupRef.current.position.y, 0);
     groupRef.current.rotateY(Math.PI);
 
-    // Hover scale
-    const targetScale = hovered ? 1.15 : 1;
-    groupRef.current.scale.lerp(
-      new THREE.Vector3(targetScale, targetScale, targetScale),
-      0.08
-    );
+    const targetScale = hovered ? 1.18 : 1;
+    scaleVec.current.set(targetScale, targetScale, targetScale);
+    groupRef.current.scale.lerp(scaleVec.current, 0.08);
   });
 
   return (
     <group ref={groupRef}>
       <Html
         transform
-        distanceFactor={6}
+        distanceFactor={mobile ? 7 : 6}
         style={{ pointerEvents: "auto" }}
       >
         <div
           className={`
-            w-[180px] md:w-[200px] p-5 rounded-2xl cursor-pointer select-none
+            ${mobile ? "w-[140px] p-3" : "w-[200px] p-5"} rounded-2xl cursor-pointer select-none
             backdrop-blur-xl border transition-all duration-500
             ${hovered
-              ? "border-[color:var(--glow)] shadow-[0_0_30px_var(--glow),0_0_60px_var(--glow-dim)] scale-105"
-              : "border-white/10 shadow-[0_4px_30px_rgba(0,0,0,0.3)]"
+              ? "border-[color:var(--glow)] scale-105"
+              : "border-white/10"
             }
           `}
           style={{
             background: hovered
-              ? `linear-gradient(135deg, rgba(0,0,0,0.6), rgba(0,0,0,0.4))`
-              : `linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))`,
+              ? `linear-gradient(135deg, rgba(0,0,0,0.65), rgba(0,0,0,0.4))`
+              : `linear-gradient(135deg, rgba(255,255,255,0.07), rgba(255,255,255,0.02))`,
+            boxShadow: hovered
+              ? `0 0 30px ${color.replace(")", " / 0.3)").replace("hsl(", "hsl(")}, 0 0 80px ${color.replace(")", " / 0.1)").replace("hsl(", "hsl(")}, inset 0 1px 0 rgba(255,255,255,0.1)`
+              : `0 4px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05)`,
             "--glow": color,
-            "--glow-dim": color.replace(")", " / 0.2)").replace("hsl(", "hsl("),
           } as React.CSSProperties}
           onPointerEnter={() => setHovered(true)}
           onPointerLeave={() => setHovered(false)}
           onClick={() => onSelect(id)}
         >
-          <div className="text-3xl mb-3">{icon}</div>
+          {/* Icon with glow */}
+          <div className={`${mobile ? "text-2xl mb-2" : "text-3xl mb-3"} relative`}>
+            {icon}
+            {hovered && (
+              <div
+                className="absolute inset-0 rounded-full blur-xl"
+                style={{ background: color, opacity: 0.15 }}
+              />
+            )}
+          </div>
+
           <h3
-            className="font-orbitron text-xs font-semibold tracking-widest uppercase mb-2 transition-colors duration-300"
+            className={`font-orbitron ${mobile ? "text-[9px]" : "text-[11px]"} font-semibold tracking-widest uppercase mb-1.5 transition-colors duration-300`}
             style={{ color: hovered ? color : "rgba(255,255,255,0.85)" }}
           >
             {label}
           </h3>
+
+          {/* Animated underline */}
+          <div
+            className="h-[1px] transition-all duration-500 rounded-full"
+            style={{
+              background: hovered
+                ? `linear-gradient(90deg, transparent, ${color}, transparent)`
+                : "linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)",
+              width: hovered ? "100%" : "40%",
+            }}
+          />
+
           <div
             className={`
-              text-[10px] font-exo uppercase tracking-wider transition-all duration-300
+              ${mobile ? "text-[8px]" : "text-[10px]"} font-exo uppercase tracking-wider mt-2 transition-all duration-300
               ${hovered ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}
             `}
             style={{ color }}
           >
-            → View
+            → Explore
           </div>
         </div>
       </Html>
 
-      {/* Subtle glow plane behind panel */}
+      {/* Ambient glow behind panel on hover */}
       {hovered && (
-        <mesh position={[0, 0, -0.05]}>
-          <planeGeometry args={[2.2, 2.8]} />
+        <mesh position={[0, 0, -0.1]}>
+          <planeGeometry args={[2.5, 3]} />
           <meshBasicMaterial
             color={color}
             transparent
-            opacity={0.04}
+            opacity={0.03}
             side={THREE.DoubleSide}
+            blending={THREE.AdditiveBlending}
           />
         </mesh>
       )}
