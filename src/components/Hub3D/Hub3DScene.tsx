@@ -147,7 +147,7 @@ const Hub3DScene = () => {
                     alt="JCN"
                     className="w-9 h-9 md:w-11 md:h-11 rounded-full object-cover border-2 border-primary/30"
                   />
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-background" />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background" style={{ background: "hsl(150, 70%, 50%)" }} />
                 </div>
                 <div>
                   <h1 className="text-xs md:text-base font-orbitron font-bold text-foreground">
