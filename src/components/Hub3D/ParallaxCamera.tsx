@@ -1,38 +1,51 @@
-import { useRef } from "react";
+import { useRef, useEffect, useCallback } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import * as THREE from "three";
 
-const ParallaxCamera = () => {
+interface ParallaxCameraProps {
+  mobile?: boolean;
+}
+
+const ParallaxCamera = ({ mobile = false }: ParallaxCameraProps) => {
   const { camera } = useThree();
   const mouse = useRef({ x: 0, y: 0 });
   const target = useRef(new THREE.Vector3(0, 0.5, 8));
+  const gyro = useRef({ x: 0, y: 0 });
 
-  // Track mouse
-  if (typeof window !== "undefined") {
-    const handler = (e: MouseEvent) => {
-      mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
-      mouse.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
-    };
-    // Only add once
-    if (!(window as any).__parallaxMouse) {
-      window.addEventListener("mousemove", handler);
-      (window as any).__parallaxMouse = true;
-      // Store for cleanup
-      (window as any).__parallaxCleanup = () => {
-        window.removeEventListener("mousemove", handler);
-        delete (window as any).__parallaxMouse;
-        delete (window as any).__parallaxCleanup;
-      };
+  const handleMouseMove = useCallback((e: MouseEvent) => {
+    mouse.current.x = (e.clientX / window.innerWidth - 0.5) * 2;
+    mouse.current.y = (e.clientY / window.innerHeight - 0.5) * 2;
+  }, []);
+
+  const handleDeviceOrientation = useCallback((e: DeviceOrientationEvent) => {
+    if (e.gamma !== null && e.beta !== null) {
+      gyro.current.x = (e.gamma / 45) * 0.5; // -1 to 1 range, clamped
+      gyro.current.y = ((e.beta - 45) / 45) * 0.5;
     }
-  }
+  }, []);
+
+  useEffect(() => {
+    if (mobile) {
+      window.addEventListener("deviceorientation", handleDeviceOrientation);
+    } else {
+      window.addEventListener("mousemove", handleMouseMove);
+    }
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("deviceorientation", handleDeviceOrientation);
+    };
+  }, [mobile, handleMouseMove, handleDeviceOrientation]);
 
   useFrame(() => {
-    // Gentle parallax offset
-    target.current.x = mouse.current.x * 1.2;
-    target.current.y = 0.5 - mouse.current.y * 0.6;
+    const inputX = mobile ? gyro.current.x : mouse.current.x;
+    const inputY = mobile ? gyro.current.y : mouse.current.y;
+    const intensity = mobile ? 0.6 : 1.2;
+
+    target.current.x = inputX * intensity;
+    target.current.y = 0.5 - inputY * (intensity * 0.5);
     target.current.z = 8;
 
-    camera.position.lerp(target.current, 0.03);
+    camera.position.lerp(target.current, 0.025);
     camera.lookAt(0, 0, 0);
   });
 

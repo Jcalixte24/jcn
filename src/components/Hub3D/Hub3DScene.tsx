@@ -1,12 +1,14 @@
 import { Suspense, useState, useCallback } from "react";
 import { Canvas } from "@react-three/fiber";
-import { Environment } from "@react-three/drei";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import WireframeSphere from "./WireframeSphere";
 import OrbitingPanel from "./OrbitingPanel";
 import ParallaxCamera from "./ParallaxCamera";
 import FloatingParticles from "./FloatingParticles";
+import NebulaField from "./NebulaField";
+import ShootingStars from "./ShootingStars";
 import About from "../About";
 import Experience from "../Experience";
 import Education from "../Education";
@@ -15,11 +17,10 @@ import Skills from "../Skills";
 import Hobbies from "../Hobbies";
 import Contact from "../Contact";
 import { Link } from "react-router-dom";
-import { FileText, Map } from "lucide-react";
+import { FileText, Map, X, ChevronDown } from "lucide-react";
 import LanguageSwitch from "../LanguageSwitch";
 import { RecruiterChatbot } from "../RecruiterChatbot";
 import profileImg from "@/assets/japhet-profile-pro.jpg";
-import { X } from "lucide-react";
 
 interface SectionNode {
   id: string;
@@ -53,15 +54,17 @@ const sectionComponents: Record<string, React.ComponentType> = {
 
 const Hub3DScene = () => {
   const { language, t } = useLanguage();
+  const isMobile = useIsMobile();
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const handleSelect = useCallback((id: string) => {
     setTransitioning(true);
     setTimeout(() => {
       setActiveSection(id);
       setTransitioning(false);
-    }, 500);
+    }, 600);
   }, []);
 
   const handleClose = useCallback(() => {
@@ -75,28 +78,32 @@ const Hub3DScene = () => {
   const ActiveComponent = activeSection ? sectionComponents[activeSection] : null;
 
   return (
-    <div className="relative w-full h-screen overflow-hidden" style={{ background: "hsl(230, 25%, 5%)" }}>
+    <div className="relative w-full h-screen overflow-hidden bg-background">
       {/* 3D Canvas */}
       <motion.div
         className="absolute inset-0"
         animate={{
-          opacity: activeSection ? 0 : 1,
-          scale: activeSection ? 1.1 : 1,
-          filter: transitioning ? "blur(8px)" : "blur(0px)",
+          opacity: activeSection ? 0.15 : 1,
+          scale: activeSection ? 1.15 : 1,
+          filter: transitioning ? "blur(12px)" : "blur(0px)",
         }}
-        transition={{ duration: 0.6, ease: "easeInOut" }}
+        transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
         <Canvas
-          camera={{ position: [0, 0.5, 8], fov: 50 }}
-          gl={{ antialias: true, alpha: true }}
-          dpr={[1, 1.5]}
+          camera={{ position: [0, 0.5, 8], fov: isMobile ? 60 : 50 }}
+          gl={{ antialias: !isMobile, alpha: true, powerPreference: isMobile ? "low-power" : "high-performance" }}
+          dpr={isMobile ? [1, 1] : [1, 1.5]}
+          frameloop={activeSection ? "demand" : "always"}
         >
           <Suspense fallback={null}>
-            <ambientLight intensity={0.15} />
+            <ambientLight intensity={0.12} />
+            <fog attach="fog" args={["hsl(230, 25%, 5%)", 15, 35]} />
 
-            <ParallaxCamera />
-            <WireframeSphere />
-            <FloatingParticles count={250} />
+            <ParallaxCamera mobile={isMobile} />
+            <WireframeSphere mobile={isMobile} />
+            <FloatingParticles count={300} mobile={isMobile} />
+            <NebulaField mobile={isMobile} />
+            <ShootingStars mobile={isMobile} />
 
             {sections.map((section, i) => (
               <OrbitingPanel
@@ -111,84 +118,176 @@ const Hub3DScene = () => {
                 yOffset={section.yOffset}
                 speed={section.speed}
                 onSelect={handleSelect}
+                mobile={isMobile}
               />
             ))}
-
-            <Environment preset="night" />
           </Suspense>
         </Canvas>
       </motion.div>
 
-      {/* Top overlay UI */}
+      {/* ─── Top Navigation Bar ─── */}
       <AnimatePresence>
         {!activeSection && (
-          <motion.div
-            className="absolute top-0 left-0 right-0 z-30 p-4 md:p-6 flex items-start justify-between"
-            initial={{ opacity: 0, y: -20 }}
+          <motion.header
+            className="absolute top-0 left-0 right-0 z-40"
+            initial={{ opacity: 0, y: -30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ delay: 0.3 }}
+            exit={{ opacity: 0, y: -30 }}
+            transition={{ delay: 0.2, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
           >
-            <div className="flex items-center gap-3">
-              <img
-                src={profileImg}
-                alt="JCN"
-                className="w-10 h-10 rounded-full border border-white/10 object-cover"
-              />
-              <div>
-                <h1 className="text-sm md:text-lg font-orbitron font-bold bg-clip-text text-transparent bg-gradient-to-r from-[hsl(195,100%,55%)] to-[hsl(260,60%,65%)]">
-                  Japhet Calixte N'DRI
-                </h1>
-                <p className="text-[10px] md:text-xs text-white/40 font-exo">
-                  Junior Data Analyst
-                </p>
+            <div className="flex items-center justify-between px-4 py-3 md:px-8 md:py-5">
+              {/* Profile badge */}
+              <motion.div
+                className="flex items-center gap-3"
+                whileHover={{ scale: 1.02 }}
+              >
+                <div className="relative">
+                  <img
+                    src={profileImg}
+                    alt="JCN"
+                    className="w-9 h-9 md:w-11 md:h-11 rounded-full object-cover border-2 border-primary/30"
+                  />
+                  <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-400 border-2 border-background" />
+                </div>
+                <div>
+                  <h1 className="text-xs md:text-base font-orbitron font-bold text-foreground">
+                    <span className="bg-clip-text text-transparent" style={{ backgroundImage: "var(--gradient-hero)" }}>
+                      Japhet Calixte
+                    </span>
+                  </h1>
+                  <p className="text-[9px] md:text-[11px] text-muted-foreground font-exo tracking-wider">
+                    Junior Data Analyst
+                  </p>
+                </div>
+              </motion.div>
+
+              {/* Desktop nav links */}
+              <div className="hidden md:flex items-center gap-1.5">
+                {[
+                  { to: "/constellation", icon: <Map className="w-3.5 h-3.5" />, label: "Constellation" },
+                  { to: "/cv", icon: <FileText className="w-3.5 h-3.5" />, label: t("nav.cv") },
+                ].map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-[11px] font-exo text-muted-foreground hover:text-foreground transition-all duration-300 backdrop-blur-xl bg-card/30 border border-border/30 hover:border-primary/30 hover:shadow-glow"
+                  >
+                    {link.icon}
+                    {link.label}
+                  </Link>
+                ))}
+                <div className="ml-2 backdrop-blur-xl bg-card/30 border border-border/30 rounded-xl px-3 py-1.5">
+                  <LanguageSwitch />
+                </div>
+              </div>
+
+              {/* Mobile menu toggle */}
+              <div className="flex md:hidden items-center gap-2">
+                <div className="backdrop-blur-xl bg-card/30 border border-border/30 rounded-xl px-2 py-1">
+                  <LanguageSwitch />
+                </div>
+                <motion.button
+                  onClick={() => setMenuOpen(!menuOpen)}
+                  className="p-2 rounded-xl backdrop-blur-xl bg-card/30 border border-border/30 text-muted-foreground"
+                  whileTap={{ scale: 0.9 }}
+                >
+                  <AnimatePresence mode="wait">
+                    <motion.div
+                      key={menuOpen ? "close" : "menu"}
+                      initial={{ rotate: -90, opacity: 0 }}
+                      animate={{ rotate: 0, opacity: 1 }}
+                      exit={{ rotate: 90, opacity: 0 }}
+                      transition={{ duration: 0.15 }}
+                    >
+                      {menuOpen ? <X className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </motion.div>
+                  </AnimatePresence>
+                </motion.button>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Link
-                to="/constellation"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-exo text-white/50 hover:text-white/80 transition-colors backdrop-blur-md bg-white/5 border border-white/10"
-              >
-                <Map className="w-3 h-3" />
-                <span className="hidden md:inline">Constellation</span>
-              </Link>
-              <Link
-                to="/cv"
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] md:text-xs font-exo text-white/50 hover:text-white/80 transition-colors backdrop-blur-md bg-white/5 border border-white/10"
-              >
-                <FileText className="w-3 h-3" />
-                <span className="hidden md:inline">{t("nav.cv")}</span>
-              </Link>
-              <div className="backdrop-blur-md bg-white/5 border border-white/10 rounded-full px-2 py-1">
-                <LanguageSwitch />
-              </div>
-            </div>
-          </motion.div>
+
+            {/* Mobile dropdown */}
+            <AnimatePresence>
+              {menuOpen && (
+                <motion.div
+                  className="md:hidden mx-4 mb-2 rounded-2xl backdrop-blur-2xl bg-card/60 border border-border/30 overflow-hidden"
+                  initial={{ opacity: 0, height: 0, y: -10 }}
+                  animate={{ opacity: 1, height: "auto", y: 0 }}
+                  exit={{ opacity: 0, height: 0, y: -10 }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                >
+                  <div className="p-3 space-y-1">
+                    {sections.map((s, i) => (
+                      <motion.button
+                        key={s.id}
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.03 }}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left text-xs font-exo text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all"
+                        onClick={() => { handleSelect(s.id); setMenuOpen(false); }}
+                      >
+                        <span className="text-base">{s.icon}</span>
+                        <span className="tracking-wider uppercase">{s.label[language]}</span>
+                      </motion.button>
+                    ))}
+                    <div className="h-px bg-border/30 my-1" />
+                    <Link
+                      to="/constellation"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-exo text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <Map className="w-4 h-4" />
+                      <span className="tracking-wider uppercase">Constellation</span>
+                    </Link>
+                    <Link
+                      to="/cv"
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-exo text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all"
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      <FileText className="w-4 h-4" />
+                      <span className="tracking-wider uppercase">{t("nav.cv")}</span>
+                    </Link>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.header>
         )}
       </AnimatePresence>
 
-      {/* Bottom hint */}
+      {/* ─── Bottom Hint ─── */}
       <AnimatePresence>
         {!activeSection && (
           <motion.div
-            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2"
-            initial={{ opacity: 0, y: 20 }}
+            className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-3"
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            transition={{ delay: 1.5 }}
+            exit={{ opacity: 0, y: 30 }}
+            transition={{ delay: 1.8, duration: 0.6 }}
           >
-            <motion.p
-              className="text-xs text-white/30 font-exo tracking-wider"
+            <motion.div
+              className="w-5 h-8 rounded-full border border-primary/30 flex items-start justify-center pt-1.5"
               animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 2.5, repeat: Infinity }}
+            >
+              <motion.div
+                className="w-1 h-1.5 rounded-full bg-primary/60"
+                animate={{ y: [0, 6, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            </motion.div>
+            <motion.p
+              className="text-[10px] text-muted-foreground font-exo tracking-[0.2em] uppercase"
+              animate={{ opacity: [0.3, 0.6, 0.3] }}
               transition={{ duration: 3, repeat: Infinity }}
             >
-              {language === "fr" ? "Survolez et cliquez pour explorer" : "Hover & click to explore"}
+              {language === "fr" ? "Explorez l'espace" : "Explore the space"}
             </motion.p>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Section content overlay */}
+      {/* ─── Section Content Overlay ─── */}
       <AnimatePresence>
         {activeSection && ActiveComponent && (
           <motion.div
@@ -196,12 +295,11 @@ const Hub3DScene = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.4 }}
+            transition={{ duration: 0.5 }}
           >
-            {/* Background */}
+            {/* Backdrop */}
             <motion.div
-              className="absolute inset-0"
-              style={{ background: "hsl(230, 25%, 5% / 0.85)", backdropFilter: "blur(12px)" }}
+              className="absolute inset-0 bg-background/80 backdrop-blur-2xl"
               onClick={handleClose}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -210,23 +308,29 @@ const Hub3DScene = () => {
 
             {/* Panel */}
             <motion.div
-              className="relative z-10 w-full max-w-4xl max-h-[85vh] overflow-y-auto cosmic-scrollbar rounded-2xl border border-white/10"
+              className="relative z-10 w-full max-w-4xl max-h-[88vh] overflow-y-auto cosmic-scrollbar rounded-3xl border border-border/30"
               style={{
-                background: "linear-gradient(145deg, hsl(230, 20%, 9% / 0.9), hsl(230, 25%, 12% / 0.9))",
-                backdropFilter: "blur(20px)",
-                boxShadow: "0 0 60px hsl(0 0% 0% / 0.5), inset 0 1px 0 hsl(0 0% 100% / 0.05)",
+                background: "var(--gradient-card)",
+                backdropFilter: "blur(24px)",
+                boxShadow: "var(--shadow-xl), inset 0 1px 0 hsl(0 0% 100% / 0.05)",
               }}
-              initial={{ scale: 0.85, opacity: 0, y: 40 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.85, opacity: 0, y: 40 }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              initial={{ scale: 0.8, opacity: 0, y: 60, rotateX: 5 }}
+              animate={{ scale: 1, opacity: 1, y: 0, rotateX: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 50 }}
+              transition={{ type: "spring", damping: 28, stiffness: 200 }}
             >
               {/* Close bar */}
-              <div className="sticky top-0 z-20 flex items-center justify-end px-4 py-3 border-b border-white/5" style={{ background: "hsl(230, 20%, 9% / 0.8)", backdropFilter: "blur(12px)" }}>
+              <div
+                className="sticky top-0 z-20 flex items-center justify-between px-5 py-3 border-b border-border/20 rounded-t-3xl"
+                style={{ background: "hsl(var(--card) / 0.85)", backdropFilter: "blur(16px)" }}
+              >
+                <span className="text-[10px] font-exo text-muted-foreground tracking-widest uppercase">
+                  {sections.find((s) => s.id === activeSection)?.label[language]}
+                </span>
                 <motion.button
                   onClick={handleClose}
-                  className="p-1.5 rounded-full text-white/40 hover:text-white/80 hover:bg-white/5 transition-all"
-                  whileHover={{ scale: 1.1 }}
+                  className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-card/50 transition-all"
+                  whileHover={{ scale: 1.1, rotate: 90 }}
                   whileTap={{ scale: 0.9 }}
                 >
                   <X className="w-4 h-4" />
