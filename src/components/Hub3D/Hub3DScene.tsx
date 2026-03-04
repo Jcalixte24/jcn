@@ -1,12 +1,14 @@
-import { Suspense, useState, useCallback, useRef } from "react";
+import { Suspense, useState, useCallback, useRef, useEffect } from "react";
 import { Canvas } from "@react-three/fiber";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useSpaceAudio } from "@/hooks/useSpaceAudio";
 import WireframeSphere from "./WireframeSphere";
 import SpaceEnvironment from "./SpaceEnvironment";
 import SectionWaypoint from "./SectionWaypoint";
 import ScrollCamera from "./ScrollCamera";
+import WarpIntro from "./WarpIntro";
 import About from "../About";
 import Experience from "../Experience";
 import Education from "../Education";
@@ -15,7 +17,7 @@ import Skills from "../Skills";
 import Hobbies from "../Hobbies";
 import Contact from "../Contact";
 import { Link } from "react-router-dom";
-import { FileText, Map, X, ChevronDown } from "lucide-react";
+import { FileText, Map, X, ChevronDown, Volume2, VolumeX } from "lucide-react";
 import LanguageSwitch from "../LanguageSwitch";
 import { RecruiterChatbot } from "../RecruiterChatbot";
 import profileImg from "@/assets/japhet-profile-pro.jpg";
@@ -28,7 +30,6 @@ interface SectionNode {
   position: [number, number, number];
 }
 
-// Sections placed along a spiral path through space
 const sections: SectionNode[] = [
   { id: "about",      label: { fr: "À Propos", en: "About" },        icon: "👤", color: "hsl(260, 60%, 65%)", position: [2.5, 0.5, -8] },
   { id: "experience", label: { fr: "Expériences", en: "Experience" }, icon: "💼", color: "hsl(150, 70%, 50%)", position: [-2.8, -0.3, -22] },
@@ -42,13 +43,8 @@ const sections: SectionNode[] = [
 const MAX_DEPTH = -100;
 
 const sectionComponents: Record<string, React.ComponentType> = {
-  about: About,
-  experience: Experience,
-  education: Education,
-  projects: Projects,
-  skills: Skills,
-  hobbies: Hobbies,
-  contact: Contact,
+  about: About, experience: Experience, education: Education,
+  projects: Projects, skills: Skills, hobbies: Hobbies, contact: Contact,
 };
 
 const Hub3DScene = () => {
@@ -57,17 +53,45 @@ const Hub3DScene = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [warpActive, setWarpActive] = useState(true);
+  const [introComplete, setIntroComplete] = useState(false);
+  const [audioStarted, setAudioStarted] = useState(false);
+  const [muted, setMuted] = useState(false);
   const cameraZRef = useRef(5);
   const scrollSpeedRef = useRef(0);
-  const [, forceUpdate] = useState(0);
 
-  // Throttled state sync for UI indicators
+  const { initAudio, updateScrollSpeed, toggleMute } = useSpaceAudio();
+
+  // Start audio on first user interaction
+  useEffect(() => {
+    const start = () => {
+      if (!audioStarted) {
+        initAudio();
+        setAudioStarted(true);
+      }
+    };
+    window.addEventListener("click", start, { once: true });
+    window.addEventListener("wheel", start, { once: true });
+    window.addEventListener("touchstart", start, { once: true });
+    return () => {
+      window.removeEventListener("click", start);
+      window.removeEventListener("wheel", start);
+      window.removeEventListener("touchstart", start);
+    };
+  }, [audioStarted, initAudio]);
+
   const handleCameraZ = useCallback((z: number) => {
     cameraZRef.current = z;
   }, []);
 
   const handleScrollSpeed = useCallback((speed: number) => {
     scrollSpeedRef.current = speed;
+    updateScrollSpeed(speed);
+  }, [updateScrollSpeed]);
+
+  const handleWarpComplete = useCallback(() => {
+    setWarpActive(false);
+    setIntroComplete(true);
   }, []);
 
   const handleSelect = useCallback((id: string) => {
@@ -86,12 +110,29 @@ const Hub3DScene = () => {
     }, 400);
   }, []);
 
-  // Find current closest section for progress indicator
+  const handleToggleMute = useCallback(() => {
+    const nowMuted = toggleMute();
+    setMuted(!!nowMuted);
+  }, [toggleMute]);
+
   const progress = Math.max(0, Math.min(1, (5 - cameraZRef.current) / (5 - MAX_DEPTH + 5)));
   const ActiveComponent = activeSection ? sectionComponents[activeSection] : null;
 
   return (
     <div id="hub3d-container" className="relative w-full h-screen overflow-hidden bg-background touch-none">
+      {/* Warp intro overlay flash */}
+      <AnimatePresence>
+        {warpActive && (
+          <motion.div
+            className="fixed inset-0 z-[100] pointer-events-none"
+            style={{ background: "radial-gradient(circle, transparent 30%, hsl(230 25% 3%) 100%)" }}
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.5 }}
+          />
+        )}
+      </AnimatePresence>
+
       {/* 3D Canvas */}
       <motion.div
         className="absolute inset-0"
@@ -117,19 +158,19 @@ const Hub3DScene = () => {
               onCameraZ={handleCameraZ}
               onScrollSpeed={handleScrollSpeed}
               maxDepth={MAX_DEPTH}
+              autoScroll={introComplete && !activeSection}
+              warpActive={warpActive}
             />
 
-            {/* Central sphere at origin */}
+            <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
             <WireframeSphere mobile={isMobile} />
 
-            {/* Space environment */}
             <SpaceEnvironment
               mobile={isMobile}
               scrollSpeed={scrollSpeedRef.current}
               cameraZ={cameraZRef.current}
             />
 
-            {/* Section waypoints placed in space */}
             {sections.map((section) => (
               <SectionWaypoint
                 key={section.id}
@@ -147,17 +188,14 @@ const Hub3DScene = () => {
         </Canvas>
       </motion.div>
 
-      {/* ─── Progress indicator (right side) ─── */}
-      {!activeSection && (
+      {/* Progress indicator */}
+      {!activeSection && introComplete && (
         <div className="fixed right-3 top-1/2 -translate-y-1/2 z-30 flex flex-col items-center gap-1">
-          {sections.map((s, i) => {
+          {sections.map((s) => {
             const sectionProgress = (5 - s.position[2]) / (5 - MAX_DEPTH + 5);
             const isActive = Math.abs(progress - sectionProgress) < 0.05;
             return (
-              <div
-                key={s.id}
-                className="group relative flex items-center"
-              >
+              <div key={s.id} className="group relative flex items-center">
                 <div
                   className="w-1.5 h-1.5 rounded-full transition-all duration-500"
                   style={{
@@ -178,9 +216,9 @@ const Hub3DScene = () => {
         </div>
       )}
 
-      {/* ─── Top Navigation Bar ─── */}
+      {/* Top Nav */}
       <AnimatePresence>
-        {!activeSection && (
+        {!activeSection && introComplete && (
           <motion.header
             className="absolute top-0 left-0 right-0 z-40"
             initial={{ opacity: 0, y: -30 }}
@@ -220,12 +258,28 @@ const Hub3DScene = () => {
                     {link.label}
                   </Link>
                 ))}
-                <div className="ml-1.5 backdrop-blur-xl bg-card/30 border border-border/30 rounded-lg px-2 py-1">
+
+                {/* Mute toggle */}
+                <button
+                  onClick={handleToggleMute}
+                  className="p-1.5 rounded-lg backdrop-blur-xl bg-card/30 border border-border/30 text-muted-foreground hover:text-foreground transition-all"
+                  title={muted ? "Unmute" : "Mute"}
+                >
+                  {muted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+                </button>
+
+                <div className="ml-1 backdrop-blur-xl bg-card/30 border border-border/30 rounded-lg px-2 py-1">
                   <LanguageSwitch />
                 </div>
               </div>
 
               <div className="flex md:hidden items-center gap-1.5">
+                <button
+                  onClick={handleToggleMute}
+                  className="p-1.5 rounded-lg backdrop-blur-xl bg-card/30 border border-border/30 text-muted-foreground"
+                >
+                  {muted ? <VolumeX className="w-3.5 h-3.5" /> : <Volume2 className="w-3.5 h-3.5" />}
+                </button>
                 <div className="backdrop-blur-xl bg-card/30 border border-border/30 rounded-lg px-2 py-1">
                   <LanguageSwitch />
                 </div>
@@ -290,15 +344,15 @@ const Hub3DScene = () => {
         )}
       </AnimatePresence>
 
-      {/* ─── Scroll Hint ─── */}
+      {/* Scroll Hint */}
       <AnimatePresence>
-        {!activeSection && (
+        {!activeSection && introComplete && (
           <motion.div
             className="absolute bottom-5 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-2"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            transition={{ delay: 2, duration: 0.6 }}
+            transition={{ delay: 1, duration: 0.6 }}
           >
             <motion.div
               className="w-4 h-7 rounded-full border border-primary/30 flex items-start justify-center pt-1"
@@ -322,7 +376,7 @@ const Hub3DScene = () => {
         )}
       </AnimatePresence>
 
-      {/* ─── Section Content Overlay ─── */}
+      {/* Section Content Overlay */}
       <AnimatePresence>
         {activeSection && ActiveComponent && (
           <motion.div
