@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Html } from "@react-three/drei";
 import * as THREE from "three";
@@ -14,10 +14,8 @@ interface SectionWaypointProps {
   mobile?: boolean;
 }
 
-/**
- * A section panel fixed in space. Becomes visible and interactive
- * as the camera approaches via scroll.
- */
+const PARTICLE_COUNT = 24;
+
 const SectionWaypoint = ({
   id,
   label,
@@ -30,26 +28,91 @@ const SectionWaypoint = ({
 }: SectionWaypointProps) => {
   const groupRef = useRef<THREE.Group>(null);
   const glowRef = useRef<THREE.Mesh>(null);
+  const pulseRing1Ref = useRef<THREE.Mesh>(null);
+  const pulseRing2Ref = useRef<THREE.Mesh>(null);
+  const particlesRef = useRef<THREE.Points>(null);
+
+  // Particle positions scattered in a sphere around the waypoint
+  const particleData = useMemo(() => {
+    const count = mobile ? 12 : PARTICLE_COUNT;
+    const pos = new Float32Array(count * 3);
+    const speeds = new Float32Array(count);
+    const offsets = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos(2 * Math.random() - 1);
+      const r = 0.8 + Math.random() * 1.5;
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = r * Math.cos(phi);
+      speeds[i] = 0.3 + Math.random() * 0.7;
+      offsets[i] = Math.random() * Math.PI * 2;
+    }
+    return { positions: pos, speeds, offsets, count };
+  }, [mobile]);
+
+  const parsedColor = useMemo(() => new THREE.Color(color), [color]);
 
   useFrame((state) => {
     if (!groupRef.current) return;
+    const t = state.clock.elapsedTime;
 
     const dist = Math.abs(cameraZ - position[2]);
-    const proximity = Math.max(0, 1 - dist / 12); // 0 = far, 1 = very close
+    const proximity = Math.max(0, 1 - dist / 12);
 
     // Scale up as camera approaches
     const scale = 0.4 + proximity * 0.6;
     groupRef.current.scale.setScalar(scale);
 
     // Gentle float
-    const t = state.clock.elapsedTime;
     groupRef.current.position.y = position[1] + Math.sin(t * 0.8 + position[2] * 0.1) * 0.15;
     groupRef.current.position.x = position[0] + Math.sin(t * 0.3 + position[2] * 0.05) * 0.08;
 
-    // Glow intensity based on proximity
+    // Glow disc
     if (glowRef.current) {
       const mat = glowRef.current.material as THREE.MeshBasicMaterial;
-      mat.opacity = proximity * 0.06;
+      mat.opacity = proximity * 0.08;
+    }
+
+    // Pulse rings
+    const pulseScale1 = 0.5 + (Math.sin(t * 2) * 0.5 + 0.5) * 1.5;
+    const pulseScale2 = 0.5 + (Math.sin(t * 2 + Math.PI) * 0.5 + 0.5) * 1.5;
+    const pulseOpacity = proximity * 0.15;
+
+    if (pulseRing1Ref.current) {
+      pulseRing1Ref.current.scale.setScalar(pulseScale1);
+      (pulseRing1Ref.current.material as THREE.MeshBasicMaterial).opacity =
+        pulseOpacity * (1 - (pulseScale1 - 0.5) / 1.5);
+    }
+    if (pulseRing2Ref.current) {
+      pulseRing2Ref.current.scale.setScalar(pulseScale2);
+      (pulseRing2Ref.current.material as THREE.MeshBasicMaterial).opacity =
+        pulseOpacity * (1 - (pulseScale2 - 0.5) / 1.5);
+    }
+
+    // Animate particles
+    if (particlesRef.current) {
+      const pMat = particlesRef.current.material as THREE.PointsMaterial;
+      pMat.opacity = proximity * 0.7;
+
+      const positions = particlesRef.current.geometry.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < particleData.count; i++) {
+        const baseX = particleData.positions[i * 3];
+        const baseY = particleData.positions[i * 3 + 1];
+        const baseZ = particleData.positions[i * 3 + 2];
+        const sp = particleData.speeds[i];
+        const off = particleData.offsets[i];
+        // Orbit & pulse outward on proximity
+        const expand = 1 + proximity * 0.6;
+        const angle = t * sp + off;
+        positions.setXYZ(
+          i,
+          baseX * expand * Math.cos(angle * 0.3) - baseZ * expand * Math.sin(angle * 0.3) * 0.2,
+          baseY * expand + Math.sin(angle) * 0.15,
+          baseZ * expand * Math.cos(angle * 0.3) + baseX * expand * Math.sin(angle * 0.3) * 0.2
+        );
+      }
+      positions.needsUpdate = true;
     }
   });
 
@@ -122,7 +185,7 @@ const SectionWaypoint = ({
       <mesh ref={glowRef} position={[0, 0, -0.2]}>
         <circleGeometry args={[1.8, 16]} />
         <meshBasicMaterial
-          color={color}
+          color={parsedColor}
           transparent
           opacity={0}
           blending={THREE.AdditiveBlending}
@@ -131,11 +194,58 @@ const SectionWaypoint = ({
         />
       </mesh>
 
-      {/* Small orbiting marker */}
+      {/* Pulse ring 1 */}
+      <mesh ref={pulseRing1Ref} position={[0, 0, -0.15]} rotation={[0, 0, 0]}>
+        <ringGeometry args={[0.9, 1.0, 32]} />
+        <meshBasicMaterial
+          color={parsedColor}
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Pulse ring 2 (offset phase) */}
+      <mesh ref={pulseRing2Ref} position={[0, 0, -0.1]} rotation={[0, 0, 0]}>
+        <ringGeometry args={[0.7, 0.78, 32]} />
+        <meshBasicMaterial
+          color={parsedColor}
+          transparent
+          opacity={0}
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+          side={THREE.DoubleSide}
+        />
+      </mesh>
+
+      {/* Proximity particles */}
+      <points ref={particlesRef}>
+        <bufferGeometry>
+          <bufferAttribute
+            attach="attributes-position"
+            count={particleData.count}
+            array={particleData.positions.slice()}
+            itemSize={3}
+          />
+        </bufferGeometry>
+        <pointsMaterial
+          color={parsedColor}
+          size={mobile ? 0.04 : 0.06}
+          transparent
+          opacity={0}
+          sizeAttenuation
+          blending={THREE.AdditiveBlending}
+          depthWrite={false}
+        />
+      </points>
+
+      {/* Center marker */}
       <mesh position={[0, 0, 0]}>
         <sphereGeometry args={[0.04, 8, 8]} />
         <meshBasicMaterial
-          color={color}
+          color={parsedColor}
           transparent
           opacity={isNear ? 0.8 : 0.3}
         />
