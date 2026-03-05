@@ -74,17 +74,17 @@ const MouseTrail = ({ mobile = false }: MouseTrailProps) => {
 
   if (mobile) return null;
 
-  return (
-    <line ref={lineRef as any} geometry={geometry}>
-      <lineBasicMaterial
-        vertexColors
-        transparent
-        blending={THREE.AdditiveBlending}
-        depthWrite={false}
-        linewidth={1}
-      />
-    </line>
-  );
+  const lineObj = useMemo(() => {
+    const mat = new THREE.LineBasicMaterial({
+      vertexColors: true,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false,
+    });
+    return new THREE.Line(geometry, mat);
+  }, [geometry]);
+
+  return <primitive ref={lineRef} object={lineObj} />;
 };
 
 export default MouseTrail;
