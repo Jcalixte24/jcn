@@ -1,5 +1,5 @@
-import { useRef, useMemo } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import { useRef, useMemo, useEffect } from "react";
+import { useFrame, useThree, extend } from "@react-three/fiber";
 import * as THREE from "three";
 
 interface MouseTrailProps {
