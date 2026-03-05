@@ -53,12 +53,21 @@ const SectionWaypoint = ({
 
   const parsedColor = useMemo(() => new THREE.Color(color), [color]);
 
+  const [isNear, setIsNear] = useState(false);
+  const [isVeryNear, setIsVeryNear] = useState(false);
+
   useFrame((state) => {
     if (!groupRef.current) return;
     const t = state.clock.elapsedTime;
 
-    const dist = Math.abs(cameraZ - position[2]);
+    const dist = Math.abs(state.camera.position.z - position[2]);
     const proximity = Math.max(0, 1 - dist / 12);
+
+    // Update near/veryNear state only on threshold change
+    const near = dist < 10;
+    const veryNear = dist < 5;
+    if (near !== isNear) setIsNear(near);
+    if (veryNear !== isVeryNear) setIsVeryNear(veryNear);
 
     // Scale up as camera approaches
     const scale = 0.4 + proximity * 0.6;
@@ -102,7 +111,6 @@ const SectionWaypoint = ({
         const baseZ = particleData.positions[i * 3 + 2];
         const sp = particleData.speeds[i];
         const off = particleData.offsets[i];
-        // Orbit & pulse outward on proximity
         const expand = 1 + proximity * 0.6;
         const angle = t * sp + off;
         positions.setXYZ(
@@ -115,10 +123,6 @@ const SectionWaypoint = ({
       positions.needsUpdate = true;
     }
   });
-
-  const dist = Math.abs(cameraZ - position[2]);
-  const isNear = dist < 10;
-  const isVeryNear = dist < 5;
 
   return (
     <group ref={groupRef} position={position}>
