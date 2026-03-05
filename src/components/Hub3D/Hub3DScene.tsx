@@ -9,6 +9,7 @@ import SpaceEnvironment from "./SpaceEnvironment";
 import SectionWaypoint from "./SectionWaypoint";
 import ScrollCamera from "./ScrollCamera";
 import WarpIntro from "./WarpIntro";
+import MouseTrail from "./MouseTrail";
 import About from "../About";
 import Experience from "../Experience";
 import Education from "../Education";
@@ -164,6 +165,7 @@ const Hub3DScene = () => {
 
             <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
             <WireframeSphere mobile={isMobile} />
+            <MouseTrail mobile={isMobile} />
 
             <SpaceEnvironment
               mobile={isMobile}
