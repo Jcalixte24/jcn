@@ -246,7 +246,7 @@ const Hub3DScene = () => {
       {/* Farewell Message */}
       <AnimatePresence>
         {showFarewell && !activeSection && introComplete && (
-          <FarewellMessage visible={true} />
+          <FarewellMessage visible={true} onReturnToStart={() => setReturnToStart(true)} />
         )}
       </AnimatePresence>
 
