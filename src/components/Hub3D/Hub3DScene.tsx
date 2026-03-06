@@ -64,6 +64,7 @@ const Hub3DScene = () => {
   const [audioStarted, setAudioStarted] = useState(false);
   const [muted, setMuted] = useState(false);
   const [showFarewell, setShowFarewell] = useState(false);
+  const [returnToStart, setReturnToStart] = useState(false);
   const cameraZRef = useRef(5);
   const [cameraZState, setCameraZState] = useState(5);
   const scrollSpeedRef = useRef(0);
@@ -173,6 +174,8 @@ const Hub3DScene = () => {
               maxDepth={MAX_DEPTH}
               autoScroll={introComplete && !activeSection}
               warpActive={warpActive}
+              returnToStart={returnToStart}
+              onReturnComplete={() => setReturnToStart(false)}
             />
 
             <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
@@ -243,7 +246,7 @@ const Hub3DScene = () => {
       {/* Farewell Message */}
       <AnimatePresence>
         {showFarewell && !activeSection && introComplete && (
-          <FarewellMessage visible={true} />
+          <FarewellMessage visible={true} onReturnToStart={() => setReturnToStart(true)} />
         )}
       </AnimatePresence>
 

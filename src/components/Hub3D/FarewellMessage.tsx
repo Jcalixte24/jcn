@@ -4,9 +4,10 @@ import { Rocket, Heart, ArrowUp } from "lucide-react";
 
 interface FarewellMessageProps {
   visible: boolean;
+  onReturnToStart: () => void;
 }
 
-const FarewellMessage = ({ visible }: FarewellMessageProps) => {
+const FarewellMessage = ({ visible, onReturnToStart }: FarewellMessageProps) => {
   const { language } = useLanguage();
 
   if (!visible) return null;
@@ -52,11 +53,17 @@ const FarewellMessage = ({ visible }: FarewellMessageProps) => {
         </div>
 
         <motion.button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="mt-3 flex items-center gap-1 mx-auto px-3 py-1 rounded-lg text-[9px] font-exo uppercase tracking-wider text-primary/80 hover:text-primary border border-primary/20 hover:border-primary/40 transition-all"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          onClick={onReturnToStart}
+          className="mt-3 flex items-center gap-1.5 mx-auto px-4 py-1.5 rounded-xl text-[9px] font-exo uppercase tracking-wider text-primary-foreground bg-primary/80 hover:bg-primary border border-primary/40 transition-all shadow-glow"
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.92 }}
         >
+          <motion.div
+            animate={{ rotate: [0, -15, 0] }}
+            transition={{ duration: 1.5, repeat: Infinity }}
+          >
+            <Rocket className="w-3 h-3 rotate-180" />
+          </motion.div>
           <ArrowUp className="w-3 h-3" />
           {language === "fr" ? "Retour au début" : "Back to top"}
         </motion.button>
