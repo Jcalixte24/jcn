@@ -174,6 +174,8 @@ const Hub3DScene = () => {
               maxDepth={MAX_DEPTH}
               autoScroll={introComplete && !activeSection}
               warpActive={warpActive}
+              returnToStart={returnToStart}
+              onReturnComplete={() => setReturnToStart(false)}
             />
 
             <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
