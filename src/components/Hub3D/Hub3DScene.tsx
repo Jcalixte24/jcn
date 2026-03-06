@@ -64,6 +64,7 @@ const Hub3DScene = () => {
   const [audioStarted, setAudioStarted] = useState(false);
   const [muted, setMuted] = useState(false);
   const [showFarewell, setShowFarewell] = useState(false);
+  const [returnToStart, setReturnToStart] = useState(false);
   const cameraZRef = useRef(5);
   const [cameraZState, setCameraZState] = useState(5);
   const scrollSpeedRef = useRef(0);
