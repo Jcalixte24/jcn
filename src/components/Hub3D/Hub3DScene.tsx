@@ -103,6 +103,7 @@ const Hub3DScene = () => {
 
   const handleScrollSpeed = useCallback((speed: number) => {
     scrollSpeedRef.current = speed;
+    setScrollSpeedState(speed);
     updateScrollSpeed(speed);
   }, [updateScrollSpeed]);
 
