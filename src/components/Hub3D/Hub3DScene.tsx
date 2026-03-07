@@ -12,6 +12,8 @@ import WarpIntro from "./WarpIntro";
 import MouseTrail from "./MouseTrail";
 import JourneyMinimap from "./JourneyMinimap";
 import FarewellMessage from "./FarewellMessage";
+import CockpitHUD from "./CockpitHUD";
+import SpaceDecor from "./SpaceDecor";
 import About from "../About";
 import Experience from "../Experience";
 import Education from "../Education";
@@ -68,6 +70,9 @@ const Hub3DScene = () => {
   const cameraZRef = useRef(5);
   const [cameraZState, setCameraZState] = useState(5);
   const scrollSpeedRef = useRef(0);
+  const [scrollSpeedState, setScrollSpeedState] = useState(0);
+
+  const waypointZs = sections.map(s => s.position[2]);
 
   const { initAudio, updateScrollSpeed, toggleMute } = useSpaceAudio();
 
@@ -98,6 +103,7 @@ const Hub3DScene = () => {
 
   const handleScrollSpeed = useCallback((speed: number) => {
     scrollSpeedRef.current = speed;
+    setScrollSpeedState(speed);
     updateScrollSpeed(speed);
   }, [updateScrollSpeed]);
 
@@ -176,11 +182,13 @@ const Hub3DScene = () => {
               warpActive={warpActive}
               returnToStart={returnToStart}
               onReturnComplete={() => setReturnToStart(false)}
+              waypointZs={waypointZs}
             />
 
             <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
             <WireframeSphere mobile={isMobile} />
             <MouseTrail mobile={isMobile} />
+            <SpaceDecor mobile={isMobile} />
 
             <SpaceEnvironment
               mobile={isMobile}
@@ -204,6 +212,16 @@ const Hub3DScene = () => {
           </Suspense>
         </Canvas>
       </motion.div>
+
+      {/* Cockpit HUD */}
+      {!activeSection && introComplete && (
+        <CockpitHUD
+          cameraZ={cameraZState}
+          scrollSpeed={scrollSpeedState}
+          maxDepth={MAX_DEPTH}
+          visible={true}
+        />
+      )}
 
       {/* Journey Minimap (desktop) */}
       {!activeSection && introComplete && (

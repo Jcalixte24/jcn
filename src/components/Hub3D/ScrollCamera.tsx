@@ -12,6 +12,8 @@ interface ScrollCameraProps {
   /** Trigger animated return to start */
   returnToStart?: boolean;
   onReturnComplete?: () => void;
+  /** Z positions of waypoints for auto-pause */
+  waypointZs?: number[];
 }
 
 const DEG2RAD = Math.PI / 180;
@@ -26,6 +28,7 @@ const ScrollCamera = ({
   warpActive = false,
   returnToStart = false,
   onReturnComplete,
+  waypointZs = [],
 }: ScrollCameraProps) => {
   const { camera } = useThree();
   const targetZ = useRef(warpActive ? -60 : 5);
@@ -43,6 +46,9 @@ const ScrollCamera = ({
   // Return animation state
   const returning = useRef(false);
   const returnStarted = useRef(false);
+  // Waypoint pause state
+  const pauseTimer = useRef(0);
+  const pausedAtWaypoint = useRef<number | null>(null);
 
   // Detect returnToStart trigger
   useEffect(() => {
@@ -116,11 +122,27 @@ const ScrollCamera = ({
       }
     }
 
-    // Auto-scroll when idle
+    // Auto-scroll when idle with waypoint pauses
     if (autoScroll && !warpActive && !returning.current) {
       const idle = Date.now() - lastInteraction.current;
       if (idle > 10000) {
-        targetZ.current = Math.max(maxDepth - 5, targetZ.current - delta * 1.2);
+        // Check if near a waypoint — pause for 3 seconds
+        const nearWaypoint = waypointZs.find(wz => Math.abs(targetZ.current - wz) < 1.5);
+        if (nearWaypoint !== undefined && pausedAtWaypoint.current !== nearWaypoint) {
+          pausedAtWaypoint.current = nearWaypoint;
+          pauseTimer.current = 0;
+        }
+        if (pausedAtWaypoint.current !== null) {
+          pauseTimer.current += delta;
+          if (pauseTimer.current < 3) {
+            // Hold position near waypoint
+          } else {
+            pausedAtWaypoint.current = null;
+            targetZ.current = Math.max(maxDepth - 5, targetZ.current - delta * 1.2);
+          }
+        } else {
+          targetZ.current = Math.max(maxDepth - 5, targetZ.current - delta * 1.2);
+        }
       }
     }
 
