@@ -12,6 +12,8 @@ interface ScrollCameraProps {
   /** Trigger animated return to start */
   returnToStart?: boolean;
   onReturnComplete?: () => void;
+  /** Z positions of waypoints for auto-pause */
+  waypointZs?: number[];
 }
 
 const DEG2RAD = Math.PI / 180;
