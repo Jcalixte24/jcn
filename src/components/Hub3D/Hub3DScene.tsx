@@ -12,6 +12,8 @@ import WarpIntro from "./WarpIntro";
 import MouseTrail from "./MouseTrail";
 import JourneyMinimap from "./JourneyMinimap";
 import FarewellMessage from "./FarewellMessage";
+import CockpitHUD from "./CockpitHUD";
+import SpaceDecor from "./SpaceDecor";
 import About from "../About";
 import Experience from "../Experience";
 import Education from "../Education";
