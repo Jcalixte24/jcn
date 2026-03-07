@@ -70,6 +70,9 @@ const Hub3DScene = () => {
   const cameraZRef = useRef(5);
   const [cameraZState, setCameraZState] = useState(5);
   const scrollSpeedRef = useRef(0);
+  const [scrollSpeedState, setScrollSpeedState] = useState(0);
+
+  const waypointZs = sections.map(s => s.position[2]);
 
   const { initAudio, updateScrollSpeed, toggleMute } = useSpaceAudio();
 
