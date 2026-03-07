@@ -188,6 +188,7 @@ const Hub3DScene = () => {
             <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
             <WireframeSphere mobile={isMobile} />
             <MouseTrail mobile={isMobile} />
+            <SpaceDecor mobile={isMobile} />
 
             <SpaceEnvironment
               mobile={isMobile}
