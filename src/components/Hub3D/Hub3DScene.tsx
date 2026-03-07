@@ -182,6 +182,7 @@ const Hub3DScene = () => {
               warpActive={warpActive}
               returnToStart={returnToStart}
               onReturnComplete={() => setReturnToStart(false)}
+              waypointZs={waypointZs}
             />
 
             <WarpIntro active={warpActive} onComplete={handleWarpComplete} mobile={isMobile} />
