@@ -28,6 +28,7 @@ const ScrollCamera = ({
   warpActive = false,
   returnToStart = false,
   onReturnComplete,
+  waypointZs = [],
 }: ScrollCameraProps) => {
   const { camera } = useThree();
   const targetZ = useRef(warpActive ? -60 : 5);
