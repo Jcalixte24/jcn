@@ -213,6 +213,16 @@ const Hub3DScene = () => {
         </Canvas>
       </motion.div>
 
+      {/* Cockpit HUD */}
+      {!activeSection && introComplete && (
+        <CockpitHUD
+          cameraZ={cameraZState}
+          scrollSpeed={scrollSpeedState}
+          maxDepth={MAX_DEPTH}
+          visible={true}
+        />
+      )}
+
       {/* Journey Minimap (desktop) */}
       {!activeSection && introComplete && (
         <JourneyMinimap
