@@ -46,6 +46,9 @@ const ScrollCamera = ({
   // Return animation state
   const returning = useRef(false);
   const returnStarted = useRef(false);
+  // Waypoint pause state
+  const pauseTimer = useRef(0);
+  const pausedAtWaypoint = useRef<number | null>(null);
 
   // Detect returnToStart trigger
   useEffect(() => {
